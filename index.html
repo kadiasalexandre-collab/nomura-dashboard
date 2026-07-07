@@ -143,6 +143,27 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 /* FEDS section */
 .feds-section{margin-top:10px;padding:10px 12px;border-top:2px solid #a855f733;background:#a855f708}
 .feds-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#a855f7;margin-bottom:8px}
+/* projecao view */
+.proj-view{display:none;overflow-y:auto;padding:16px 20px;flex:1}
+.proj-view.active{display:block}
+.proj-table{width:100%;border-collapse:collapse;font-size:11px}
+.proj-table th{padding:8px 12px;font-size:8px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600;white-space:nowrap;border-bottom:1px solid var(--border)}
+.proj-table th.th-fam{text-align:left}
+.proj-table th.th-mes{text-align:center;min-width:100px}
+.proj-table td{padding:7px 12px;border-bottom:1px solid var(--border)20;vertical-align:middle}
+.proj-table tr:hover td{background:var(--surface2)}
+.proj-cell{display:flex;flex-direction:column;align-items:center;gap:1px}
+.proj-cell-val{font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.proj-cell-lbl{font-size:7.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.proj-ok{background:#052e1612;color:#22d3a0}
+.proj-risco{background:#7f3f0020;color:#fb923c}
+.proj-rupt{background:#c0000025;color:#f87171}
+.proj-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.proj-badge-ok{background:#052e1630;color:#22d3a0}
+.proj-badge-risco{background:#7f3f0030;color:#fb923c}
+.proj-badge-rupt{background:#c0000035;color:#f87171}
+.proj-legend{display:flex;gap:12px;align-items:center;margin-bottom:12px;font-size:9px;color:var(--muted)}
+.proj-legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px}
 /* cards view */
 .cards-view{display:none;overflow-y:auto;padding:16px 20px;flex:1}
 .cards-view.active{display:block}
@@ -219,6 +240,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="view-tabs">
         <button class="view-tab active" id="tabDash" onclick="setView('dash',this)">Dashboard</button>
         <button class="view-tab" id="tabCards" onclick="setView('cards',this)">Cards</button>
+        <button class="view-tab" id="tabProj" onclick="setView('proj',this)">Projeção de Ruptura</button>
       </div>
       <button class="agend-btn" onclick="openAgend()">📦 Agendamentos</button>
       <span class="tag tag-live">● AO VIVO</span>
@@ -292,6 +314,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div class="alerts-panel" id="alertsPanel"></div>
   </div>
+  <div class="proj-view" id="projView"></div>
   <div class="cards-view" id="cardsView">
     <div class="cards-export-bar" id="cardsExportBar">
       <button class="print-btn" onclick="printCards()">🖨 Exportar / Imprimir</button>
@@ -826,15 +849,97 @@ function setView(mode, btn){
   btn.classList.add('active');
   var mainEl=document.querySelector('.main');
   var cardsEl=document.getElementById('cardsView');
+  var projEl=document.getElementById('projView');
   var exportBar=document.getElementById('cardsExportBar');
+  cardsEl.classList.remove('active');
+  projEl.classList.remove('active');
+  if(exportBar) exportBar.classList.remove('visible');
   if(mode==='cards'){
     mainEl.style.display='none'; cardsEl.classList.add('active');
     if(exportBar) exportBar.classList.add('visible');
     renderCards();
+  } else if(mode==='proj'){
+    mainEl.style.display='none'; projEl.classList.add('active');
+    renderProjecao();
   } else {
-    mainEl.style.display=''; cardsEl.classList.remove('active');
-    if(exportBar) exportBar.classList.remove('visible');
+    mainEl.style.display='';
   }
+}
+function renderProjecao(){
+  var MESES=[
+    {key:'jul',nome:'Julho',cart:'cart_jul',vest:'vest_jul'},
+    {key:'ago',nome:'Agosto',cart:'cart_ago',vest:'vest_ago'},
+    {key:'set',nome:'Setembro',cart:'cart_set',vest:'vest_set'},
+    {key:'out',nome:'Outubro',cart:'cart_out',vest:'vest_out'},
+    {key:'nov',nome:'Novembro',cart:'cart_nov',vest:'vest_nov'},
+  ];
+  var rows = _familiesOrig.map(function(f){
+    var base = (f.estoque||0)+(f.agend||0);
+    var saldos = [], saldo = base;
+    MESES.forEach(function(m){
+      saldo += (f[m.cart]||0) - (f[m.vest]||0);
+      saldos.push(saldo);
+    });
+    // primeiro mês com saldo ≤ 0
+    var ruptIdx = -1;
+    for(var i=0;i<saldos.length;i++){ if(saldos[i]<=0){ruptIdx=i;break;} }
+    return {f:f, saldos:saldos, ruptIdx:ruptIdx};
+  });
+  // ordena: ruptura mais cedo primeiro, depois risco, depois OK por saldo final
+  rows.sort(function(a,b){
+    if(a.ruptIdx>=0 && b.ruptIdx>=0) return a.ruptIdx-b.ruptIdx;
+    if(a.ruptIdx>=0) return -1;
+    if(b.ruptIdx>=0) return 1;
+    return a.saldos[4]-b.saldos[4];
+  });
+  function cellHtml(saldo, vestMes){
+    var cls, lbl;
+    if(saldo<=0){cls='proj-rupt';lbl='RUPTURA';}
+    else if(saldo<vestMes){cls='proj-risco';lbl='RISCO';}
+    else{cls='proj-ok';lbl='OK';}
+    var sign=saldo>=0?'+':'';
+    return '<td class="'+cls+'" style="text-align:center">'
+      +'<div class="proj-cell">'
+        +'<span class="proj-cell-val">'+sign+saldo.toLocaleString('pt-BR')+'</span>'
+        +'<span class="proj-cell-lbl">'+lbl+'</span>'
+      +'</div></td>';
+  }
+  function badgeHtml(ruptIdx){
+    if(ruptIdx<0) return '<span class="proj-badge proj-badge-ok">✓ OK</span>';
+    var m=MESES[ruptIdx];
+    return '<span class="proj-badge proj-badge-rupt">⚠ '+m.nome+'</span>';
+  }
+  var nRupt=rows.filter(function(r){return r.ruptIdx>=0;}).length;
+  var nRisco=rows.filter(function(r){return r.ruptIdx<0&&r.saldos[4]<(r.f[MESES[4].vest]||0);}).length;
+  var tableRows=rows.map(function(r){
+    var f=r.f;
+    return '<tr>'
+      +'<td style="font-size:10px;font-weight:700;color:var(--text);white-space:nowrap">'+f.name+'</td>'
+      +'<td style="text-align:center;font-size:10px;color:var(--muted)">'+f.woh+' sem</td>'
+      +r.saldos.map(function(s,i){return cellHtml(s,f[MESES[i].vest]||0);}).join('')
+      +'<td style="text-align:center">'+badgeHtml(r.ruptIdx)+'</td>'
+    +'</tr>';
+  }).join('');
+  document.getElementById('projView').innerHTML=
+    '<div style="margin-bottom:14px">'
+      +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Projeção de Ruptura — '+DATA.mes_nome+' a Novembro '+DATA.ano+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:10px">Saldo acumulado = estoque + agend + carteira acumulada − venda estimada acumulada</div>'
+      +'<div class="proj-legend">'
+        +'<span><span class="proj-legend-dot" style="background:#f8717150"></span>Ruptura — '+nRupt+' famílias</span>'
+        +'<span><span class="proj-legend-dot" style="background:#fb923c50"></span>Risco (&lt; 1 mês cobertura) — '+nRisco+' famílias</span>'
+        +'<span><span class="proj-legend-dot" style="background:#22d3a030"></span>OK</span>'
+      +'</div>'
+    +'</div>'
+    +'<div style="overflow-x:auto">'
+    +'<table class="proj-table">'
+      +'<thead><tr>'
+        +'<th class="th-fam">Família</th>'
+        +'<th class="th-mes">WOH Atual</th>'
+        +MESES.map(function(m){return '<th class="th-mes">'+m.nome+'</th>';}).join('')
+        +'<th class="th-mes">Ruptura em</th>'
+      +'</tr></thead>'
+      +'<tbody>'+tableRows+'</tbody>'
+    +'</table></div>';
 }
 function renderCards(){
   var arr=getSorted();
