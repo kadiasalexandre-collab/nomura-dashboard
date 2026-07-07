@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saldo Teórico — Dashboard Adidas Nomura</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e2035;--surface:#162d4a;--surface2:#1c3858;--border:#1e4d72;
+  --blue:#5b9cf6;--green:#22d3a0;--red:#f87171;--orange:#fb923c;--amber:#fbbf24;--purple:#c084fc;
+  --text:#e8f2fc;--muted:#7aaac8;--dim:#b0cce0;
+  --font:-apple-system,'Helvetica Neue',system-ui,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden}
+.app{display:grid;grid-template-rows:auto auto 1fr;height:100vh}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-logo{width:28px;height:28px;background:var(--blue);border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:#fff}
+.hdr-title{font-size:15px;font-weight:700;letter-spacing:.5px}
+.hdr-sub{font-size:10px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.tag{padding:3px 8px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.tag-live{background:#10b9811a;color:var(--green);border:1px solid #10b98133}
+.tag-date{background:var(--surface2);color:var(--dim);font-size:11px;padding:3px 10px;border-radius:3px}
+.kpi-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.kpi-bar-rs{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-bottom:2px solid var(--border)}
+.kpi{background:var(--surface);padding:10px 16px}
+.kpi.meta-geral{background:#1e1b4b18;border-top:2px solid #6366f1}
+.kpi.meta-fam{background:#052e1618;border-top:2px solid #10b981}
+.cards-view{background:#eff6ff!important}
+.state-bar{display:flex;align-items:center;gap:6px;padding:6px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.state-bar-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-right:4px}
+.state-btn{padding:3px 10px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--dim);font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.4px}
+.state-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.kpi-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-sub{font-size:9.5px;color:var(--dim);margin-top:3px}
+.kpi-g{color:var(--green)}.kpi-r{color:var(--red)}.kpi-a{color:var(--amber)}.kpi-b{color:var(--blue)}
+.main{display:grid;grid-template-columns:300px 1fr 220px;height:100%;overflow:hidden}
+.ranking-panel{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+.sort-btns{display:flex;gap:4px}
+.sort-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:2px 6px;border-radius:2px;cursor:pointer;font-family:var(--font);letter-spacing:.3px}
+.sort-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.ranking-list{overflow-y:auto;flex:1;padding:6px 0}
+.rank-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;border-bottom:1px solid #0f1d3040;transition:background .1s}
+.rank-item:hover{background:var(--surface2)}
+.rank-item.active{background:#1e3354}
+.rank-num{font-size:9px;color:var(--muted);width:16px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.rank-meta{font-size:9px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.rank-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.rank-woh{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bar-track{height:3px;background:var(--border);border-radius:2px;margin-top:3px}
+.bar-fill{height:100%;border-radius:2px}
+.detail-panel{overflow-y:auto;padding:16px 20px;background:var(--bg)}
+.detail-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.detail-name{font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1}
+.detail-cat{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:4px}
+.status-badge{padding:4px 10px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge-ok{background:#10b9811a;color:var(--green);border:1px solid #10b98133}
+.badge-ruptura{background:#ef44441a;color:var(--red);border:1px solid #ef444433}
+.badge-excesso{background:#f974161a;color:var(--orange);border:1px solid #f9741633}
+.badge-estrela{background:#a855f71a;color:var(--purple);border:1px solid #a855f733}
+.badge-semgiro{background:#64748b1a;color:var(--muted);border:1px solid #64748b33}
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.metric-card.accent{border-color:var(--blue);background:#3b82f60a}
+.metric-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.metric-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.metric-sub{font-size:9px;color:var(--dim);margin-top:2px}
+.chart-section{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:12px}
+.chart-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.chart-legend{display:flex;gap:12px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+.proj-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px}
+.proj-month{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.proj-main{display:flex;align-items:baseline;gap:6px}
+.proj-val{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.proj-unit{font-size:10px;color:var(--muted)}
+.proj-bar-track{height:6px;background:var(--border);border-radius:3px;margin-top:8px}
+.proj-bar-fill{height:100%;border-radius:3px}
+.proj-sub{font-size:9px;color:var(--dim);margin-top:5px}
+.woh-section{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:12px}
+.woh-canvas{flex-shrink:0}
+.woh-info{flex:1}
+.woh-label{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px}
+.woh-val-big{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.woh-sub{font-size:10px;color:var(--dim);margin-top:3px}
+.woh-scale{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:10px}
+.woh-seg{flex:1;height:100%}
+.alerts-panel{border-left:1px solid var(--border);background:var(--surface);overflow-y:auto}
+.alert-section{padding:10px 12px;border-bottom:1px solid var(--border)}
+.alert-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.alert-item{padding:6px 8px;border-radius:4px;margin-bottom:4px;cursor:pointer;transition:background .1s}
+.alert-item:hover{background:var(--surface2)}
+.alert-fam{font-size:10px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-detail{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
+.alert-r{background:#ef44440c;border-left:2px solid var(--red)}
+.alert-g{background:#10b9810c;border-left:2px solid var(--green)}
+.alert-o{background:#f974160c;border-left:2px solid var(--orange)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.empty-detail{display:flex;flex-direction:column;align-items:center;justify-content:center;height:80%;color:var(--muted);gap:8px}
+/* filters */
+.filt-btns{display:flex;gap:4px;margin-left:8px}
+.filt-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:2px 7px;border-radius:10px;cursor:pointer;font-family:var(--font)}
+.filt-btn.active{background:#a855f7;border-color:#a855f7;color:#fff}
+.filt-btn.act-feds{background:#a855f7;border-color:#a855f7;color:#fff}
+.filt-btn.act-other{background:var(--blue);border-color:var(--blue);color:#fff}
+/* division filter */
+.div-btns{display:flex;gap:4px;margin-left:8px}
+.div-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:2px 7px;border-radius:10px;cursor:pointer;font-family:var(--font)}
+.div-btn.act-div-all{background:var(--dim);border-color:var(--dim);color:#fff}
+.div-btn.act-div-ftw{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.div-btn.act-div-app{background:#10b981;border-color:#10b981;color:#fff}
+/* Agendamento button */
+.agend-btn{background:#10b9811a;border:1px solid #10b98133;color:var(--green);font-size:10px;font-weight:600;padding:4px 12px;border-radius:4px;cursor:pointer;font-family:var(--font);letter-spacing:.3px}
+.agend-btn:hover{background:#10b98133}
+/* Overlay */
+.overlay{position:fixed;inset:0;background:#000000cc;z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.overlay-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;width:min(860px,95vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.overlay-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.overlay-title{font-size:14px;font-weight:700;letter-spacing:.3px}
+.overlay-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:0 4px}
+.overlay-body{overflow-y:auto;padding:16px 18px}
+.agend-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.agend-kpi{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:10px 12px}
+.agend-table{width:100%;border-collapse:collapse;font-size:11px}
+.agend-table th{background:var(--surface2);padding:6px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border)}
+.agend-table td{padding:7px 10px;border-bottom:1px solid #1e335430;font-variant-numeric:tabular-nums}
+.agend-table tr:hover td{background:var(--surface2)}
+.week-chip{display:inline-block;background:var(--border);border-radius:3px;padding:1px 5px;font-size:9px;margin:1px;white-space:nowrap}
+.st-chip{display:inline-block;border-radius:3px;padding:1px 6px;font-size:9px;font-weight:600}
+/* FEDS section */
+.feds-section{margin-top:10px;padding:10px 12px;border-top:2px solid #a855f733;background:#a855f708}
+.feds-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#a855f7;margin-bottom:8px}
+/* cards view */
+.cards-view{display:none;overflow-y:auto;padding:16px 20px;flex:1}
+.cards-view.active{display:block}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.cards-section-hdr{grid-column:1/-1;padding:6px 4px 2px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.fam-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer}
+.fam-card:hover{border-color:var(--blue)}
+.fam-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)}
+.fam-card-name{font-size:10px;font-weight:800;letter-spacing:.2px;text-transform:uppercase}
+.fam-card-woh{font-size:11px;font-weight:700}
+.fam-card-body{padding:0}
+.fam-row{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;border-bottom:1px solid var(--border)20}
+.fam-row-lbl{font-size:9.5px;color:var(--muted)}
+.fam-row-val{font-size:10px;font-weight:600;font-variant-numeric:tabular-nums}
+.card-badge-x{color:#ef4444;font-size:15px;font-weight:900;line-height:1;flex-shrink:0}
+.card-badge-ok{color:#22c55e;font-size:15px;font-weight:900;line-height:1;flex-shrink:0}
+.page-break{display:none}
+.cards-export-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.cards-export-bar.visible{display:flex}
+.print-btn{padding:5px 14px;border:none;border-radius:4px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.3px}
+.print-btn:hover{background:#1d4ed8}
+.fam-row-sep{border-top:1px solid var(--border);margin:2px 0}
+.fam-row-saldo{background:var(--surface2)}
+/* tab buttons */
+.view-tabs{display:flex;gap:3px;margin-left:16px}
+.view-tab{background:none;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:3px 10px;border-radius:3px;cursor:pointer;font-family:var(--font)}
+.view-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+/* resumo overlay */
+.resumo-overlay{position:fixed;inset:0;background:#00000090;z-index:3000;display:none;align-items:center;justify-content:center}
+.resumo-overlay.open{display:flex}
+.resumo-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:min(920px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px #00000060}
+.resumo-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.resumo-title{font-size:22px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+.resumo-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+.resumo-body{overflow-y:auto;padding:22px}
+.resumo-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.resumo-kpi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px}
+.resumo-kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.resumo-kpi-val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.resumo-kpi-sub{font-size:10px;color:var(--dim);margin-top:4px}
+.resumo-sec-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px}
+.resumo-btn{background:var(--blue)20;border:1px solid var(--blue)40;color:var(--blue);font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--font)}
+.resumo-btn:hover{background:var(--blue)35}
+.close-resumo-btn{background:none;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:5px;cursor:pointer;font-family:var(--font);font-size:14px}
+@media print{
+  @page{size:A4 landscape;margin:1.2cm}
+  body{background:#fff!important;padding:0!important;margin:0!important;overflow:visible!important}
+  .hdr,.kpi-bar,.kpi-bar-rs,.state-bar,.view-tabs,.main,.overlay,.resumo-overlay,.cards-export-bar{display:none!important}
+  .app{display:block!important;height:auto!important}
+  .cards-view{display:block!important;padding:0!important;background:#fff!important;overflow:visible!important}
+  .cards-grid{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:5px!important}
+  .fam-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important;background:#fff!important}
+  .fam-card:hover{border-color:#ccc!important}
+  .fam-card-hdr{border-bottom:1px solid #ccc!important}
+  .fam-row{border-bottom:1px solid #f0f0f0!important}
+  .fam-row-sep{display:none!important}
+  .cards-section-hdr{break-inside:avoid;background:#f3e8ff!important;color:#7e22ce!important;border:1px solid #d8b4fe!important;padding:4px 6px!important}
+  .page-break{break-after:page!important;display:block!important;grid-column:1/-1;height:0;visibility:hidden}
+  :root{--text:#111;--muted:#666;--green:#1a7a3a;--red:#c0392b;--blue:#2563eb;--border:#ddd;--surface:#fff;--surface2:#f5f5f5}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="hdr-brand">
+      <div class="hdr-logo">AD</div>
+      <div>
+        <div class="hdr-title">SALDO TEÓRICO — NOMURA</div>
+        <div class="hdr-sub">Acompanhamento de Famílias · Adidas Brasil</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabDash" onclick="setView('dash',this)">Dashboard</button>
+        <button class="view-tab" id="tabCards" onclick="setView('cards',this)">Cards</button>
+      </div>
+      <button class="agend-btn" onclick="openAgend()">📦 Agendamentos</button>
+      <span class="tag tag-live">● AO VIVO</span>
+      <span class="tag-date" id="tagDate"></span>
+    </div>
+  </header>
+  <div class="kpi-bar" id="kpiBar"></div>
+  <div class="kpi-bar kpi-bar-rs" id="kpiBarRS"></div>
+  <div class="state-bar">
+    <span class="state-bar-label">Estado</span>
+    <button class="state-btn active" id="stateBtnAll" onclick="setStateFilter('all',this)">Todos</button>
+    <button class="state-btn" id="stateBtnSC"  onclick="setStateFilter('SC',this)">SC</button>
+    <button class="state-btn" id="stateBtnSP"  onclick="setStateFilter('SP',this)">SP</button>
+    <button class="state-btn" id="stateBtnRJ"  onclick="setStateFilter('RJ',this)">RJ</button>
+    <span id="stateNote" style="display:none;margin-left:10px;font-size:9px;color:var(--muted);font-style:italic">⚠ WOH sem vendas no estado é estimado proporcionalmente ao estoque</span>
+  </div>
+  <!-- Overlay Agendamentos -->
+  <div class="overlay" id="agendOverlay" onclick="closeAgendIfBg(event)">
+    <div class="overlay-box">
+      <div class="overlay-hdr">
+        <span class="overlay-title">📦 Agendamentos Pendentes</span>
+        <button class="overlay-close" onclick="closeAgend()">×</button>
+      </div>
+      <div class="overlay-body" id="agendBody"></div>
+    </div>
+  </div>
+  <div class="resumo-overlay" id="resumoOverlay" onclick="closeResumoIfBg(event)">
+    <div class="resumo-box">
+      <div class="resumo-hdr">
+        <div>
+          <div class="resumo-title" id="resumoTitle"></div>
+          <div class="resumo-sub" id="resumoSub"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="resumoBadge"></span>
+          <button class="close-resumo-btn" onclick="closeResumo()">✕</button>
+        </div>
+      </div>
+      <div class="resumo-body" id="resumoBody"></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="ranking-panel">
+      <div class="panel-hdr" style="flex-wrap:wrap;gap:6px">
+        <span class="panel-title" id="rankTitle">Ranking</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          <div class="sort-btns">
+            <button class="sort-btn active" onclick="setSort('score',this)">Score</button>
+            <button class="sort-btn" onclick="setSort('estoque',this)">Est.</button>
+            <button class="sort-btn" onclick="setSort('woh_asc',this)">WOH ↑</button>
+            <button class="sort-btn" onclick="setSort('woh_desc',this)">WOH ↓</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="filt-btns">
+              <button class="filt-btn active" onclick="setFilt('all',this)">Todas</button>
+              <button class="filt-btn" onclick="setFilt('feds',this)">FEDS</button>
+              <button class="filt-btn" onclick="setFilt('other',this)">Outras</button>
+            </div>
+            <div class="div-btns">
+              <button class="div-btn act-div-all" onclick="setDiv('all',this)">Div: Todas</button>
+              <button class="div-btn" onclick="setDiv('ftw',this)">👟 FTW</button>
+              <button class="div-btn" onclick="setDiv('app',this)">👕 APP</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ranking-list" id="rankingList"></div>
+    </div>
+    <div class="detail-panel" id="detailPanel">
+      <div class="empty-detail"><span style="font-size:32px;opacity:.3">📊</span><span style="font-size:12px">Selecione uma família no ranking</span></div>
+    </div>
+    <div class="alerts-panel" id="alertsPanel"></div>
+  </div>
+  <div class="cards-view" id="cardsView">
+    <div class="cards-export-bar" id="cardsExportBar">
+      <button class="print-btn" onclick="printCards()">🖨 Exportar / Imprimir</button>
+      <span style="font-size:9px;color:var(--muted)">A4 paisagem · 5 cards × 3 linhas por página</span>
+    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+</div>
+<script>
+const DATA = {"date": "07/07/2026", "mes_nome": "Julho", "mes_num": 7, "ano": 2026, "dia_corte": 6, "dias_no_mes": 31, "meta_rs": 41180000.0, "realizado_rs": 8570359.850002432, "realizado_rs_fams": 4812231.849999973, "meta_saldo_rs": 25773928.234061018, "families": [{"name": "EVOSL", "div": "FTW", "estoque": 10177, "agend": 2826, "woh": 14, "real_jul": 727, "vendas": [2020, 2356, 4198, 4823, 4539, 3751], "proj": [{"mes": "2026-07", "cart": 701, "vest": 4202}, {"mes": "2026-08", "cart": 1566, "vest": 4134}, {"mes": "2026-09", "cart": 5556, "vest": 4078}, {"mes": "2026-10", "cart": 2424, "vest": 4120}, {"mes": "2026-11", "cart": 2586, "vest": 4110}], "by_state": {"SC": {"est": 1706, "agd": 491, "cart_jul": 210, "real_jul": 125, "rs": 150726}, "SP": {"est": 4810, "agd": 1107, "cart_jul": 408, "real_jul": 285, "rs": 353255}, "RJ": {"est": 3661, "agd": 1228, "cart_jul": 83, "real_jul": 317, "rs": 395654}}}, {"name": "TRACK PANTS", "div": "APP", "estoque": 6713, "agend": 1249, "woh": 15, "real_jul": 442, "vendas": [2323, 1826, 2262, 1851, 2769, 2832], "proj": [{"mes": "2026-07", "cart": 316, "vest": 2617}, {"mes": "2026-08", "cart": 780, "vest": 2712}, {"mes": "2026-09", "cart": 2080, "vest": 2708}, {"mes": "2026-10", "cart": 210, "vest": 2691}, {"mes": "2026-11", "cart": 966, "vest": 1586}], "by_state": {"SC": {"est": 1690, "agd": 297, "cart_jul": 54, "real_jul": 68, "rs": 32769}, "SP": {"est": 3044, "agd": 581, "cart_jul": 262, "real_jul": 215, "rs": 118442}, "RJ": {"est": 1979, "agd": 371, "cart_jul": 0, "real_jul": 159, "rs": 83135}}}, {"name": "SL 72", "div": "FTW", "estoque": 4518, "agend": 1128, "woh": 13, "real_jul": 346, "vendas": [1447, 1381, 2008, 2128, 2658, 2030], "proj": [{"mes": "2026-07", "cart": 98, "vest": 2238}, {"mes": "2026-08", "cart": 0, "vest": 2260}, {"mes": "2026-09", "cart": 1206, "vest": 2207}, {"mes": "2026-10", "cart": 1533, "vest": 1778}, {"mes": "2026-11", "cart": 954, "vest": 954}], "by_state": {"SC": {"est": 1088, "agd": 186, "cart_jul": 0, "real_jul": 60, "rs": 59317}, "SP": {"est": 2052, "agd": 562, "cart_jul": 98, "real_jul": 170, "rs": 136045}, "RJ": {"est": 1378, "agd": 380, "cart_jul": 0, "real_jul": 116, "rs": 96937}}}, {"name": "SAMBA", "div": "FTW", "estoque": 6104, "agend": 4724, "woh": 9, "real_jul": 651, "vendas": [1539, 1753, 1842, 2349, 3321, 2843], "proj": [{"mes": "2026-07", "cart": 21, "vest": 2888}, {"mes": "2026-08", "cart": 1573, "vest": 2961}, {"mes": "2026-09", "cart": 4938, "vest": 2916}, {"mes": "2026-10", "cart": 4209, "vest": 2924}, {"mes": "2026-11", "cart": 1566, "vest": 2929}], "by_state": {"SC": {"est": 1174, "agd": 957, "cart_jul": 0, "real_jul": 138, "rs": 118833}, "SP": {"est": 2931, "agd": 2348, "cart_jul": 21, "real_jul": 288, "rs": 250684}, "RJ": {"est": 1999, "agd": 1419, "cart_jul": 0, "real_jul": 225, "rs": 190948}}}, {"name": "SPEZIAL", "div": "FTW", "estoque": 3656, "agend": 2487, "woh": 18, "real_jul": 208, "vendas": [980, 886, 1087, 959, 1606, 1266], "proj": [{"mes": "2026-07", "cart": 108, "vest": 1307}, {"mes": "2026-08", "cart": 3393, "vest": 1354}, {"mes": "2026-09", "cart": 3822, "vest": 1322}, {"mes": "2026-10", "cart": 6429, "vest": 1329}, {"mes": "2026-11", "cart": 2946, "vest": 1332}], "by_state": {"SC": {"est": 730, "agd": 365, "cart_jul": 0, "real_jul": 50, "rs": 45079}, "SP": {"est": 1957, "agd": 1263, "cart_jul": 108, "real_jul": 89, "rs": 90210}, "RJ": {"est": 969, "agd": 859, "cart_jul": 0, "real_jul": 69, "rs": 78121}}}, {"name": "SAMBA BRANCO", "div": "FTW", "estoque": 2264, "agend": 770, "woh": 11, "real_jul": 213, "vendas": [954, 861, 1026, 1000, 1390, 1475], "proj": [{"mes": "2026-07", "cart": 0, "vest": 1354}, {"mes": "2026-08", "cart": 0, "vest": 1398}, {"mes": "2026-09", "cart": 2202, "vest": 1400}, {"mes": "2026-10", "cart": 1200, "vest": 1390}, {"mes": "2026-11", "cart": 2901, "vest": 1395}], "by_state": {"SC": {"est": 840, "agd": 20, "cart_jul": 0, "real_jul": 55, "rs": 49137}, "SP": {"est": 939, "agd": 275, "cart_jul": 0, "real_jul": 96, "rs": 87674}, "RJ": {"est": 485, "agd": 475, "cart_jul": 0, "real_jul": 62, "rs": 60046}}}, {"name": "SAMBA JANE", "div": "FTW", "estoque": 4461, "agend": 1517, "woh": 17, "real_jul": 263, "vendas": [212, 591, 930, 871, 1367, 1146], "proj": [{"mes": "2026-07", "cart": 1, "vest": 1157}, {"mes": "2026-08", "cart": 786, "vest": 1196}, {"mes": "2026-09", "cart": 3858, "vest": 1174}, {"mes": "2026-10", "cart": 1572, "vest": 1177}, {"mes": "2026-11", "cart": 756, "vest": 1180}], "by_state": {"SC": {"est": 1214, "agd": 304, "cart_jul": 0, "real_jul": 42, "rs": 26436}, "SP": {"est": 1596, "agd": 590, "cart_jul": 0, "real_jul": 138, "rs": 77655}, "RJ": {"est": 1651, "agd": 623, "cart_jul": 1, "real_jul": 83, "rs": 56686}}}, {"name": "TRACK SHORTS", "div": "APP", "estoque": 3944, "agend": 60, "woh": 50, "real_jul": 79, "vendas": [1541, 988, 811, 724, 483, 339], "proj": [{"mes": "2026-07", "cart": 18, "vest": 459}, {"mes": "2026-08", "cart": 0, "vest": 428}, {"mes": "2026-09", "cart": 150, "vest": 420}, {"mes": "2026-10", "cart": 0, "vest": 430}, {"mes": "2026-11", "cart": 552, "vest": 427}], "by_state": {"SC": {"est": 1070, "agd": 0, "cart_jul": 0, "real_jul": 16, "rs": 3884}, "SP": {"est": 1829, "agd": 0, "cart_jul": 18, "real_jul": 37, "rs": 8427}, "RJ": {"est": 1045, "agd": 60, "cart_jul": 0, "real_jul": 26, "rs": 6882}}}, {"name": "DRIVE RC", "div": "FTW", "estoque": 4045, "agend": 673, "woh": 28, "real_jul": 147, "vendas": [1085, 683, 645, 608, 784, 916], "proj": [{"mes": "2026-07", "cart": 0, "vest": 815}, {"mes": "2026-08", "cart": 42, "vest": 839}, {"mes": "2026-09", "cart": 2353, "vest": 847}, {"mes": "2026-10", "cart": 0, "vest": 838}, {"mes": "2026-11", "cart": 0, "vest": 841}], "by_state": {"SC": {"est": 1185, "agd": 202, "cart_jul": 0, "real_jul": 30, "rs": 31090}, "SP": {"est": 1731, "agd": 195, "cart_jul": 0, "real_jul": 43, "rs": 41190}, "RJ": {"est": 1129, "agd": 276, "cart_jul": 0, "real_jul": 74, "rs": 70019}}}, {"name": "UB", "div": "FTW", "estoque": 699, "agend": 0, "woh": 23, "real_jul": 31, "vendas": [1245, 713, 584, 275, 303, 178], "proj": [{"mes": "2026-07", "cart": 0, "vest": 235}, {"mes": "2026-08", "cart": 0, "vest": 232}, {"mes": "2026-09", "cart": 0, "vest": 222}, {"mes": "2026-10", "cart": 0, "vest": 10}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 174, "agd": 0, "cart_jul": 0, "real_jul": 10, "rs": 10552}, "SP": {"est": 340, "agd": 0, "cart_jul": 0, "real_jul": 15, "rs": 17195}, "RJ": {"est": 185, "agd": 0, "cart_jul": 0, "real_jul": 6, "rs": 6871}}}, {"name": "ADI2000", "div": "FTW", "estoque": 1392, "agend": 0, "woh": 22, "real_jul": 63, "vendas": [522, 529, 574, 478, 569, 484], "proj": [{"mes": "2026-07", "cart": 0, "vest": 508}, {"mes": "2026-08", "cart": 0, "vest": 513}, {"mes": "2026-09", "cart": 0, "vest": 371}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 1236, "vest": 214}], "by_state": {"SC": {"est": 270, "agd": 0, "cart_jul": 0, "real_jul": 3, "rs": 2304}, "SP": {"est": 457, "agd": 0, "cart_jul": 0, "real_jul": 27, "rs": 24162}, "RJ": {"est": 665, "agd": 0, "cart_jul": 0, "real_jul": 33, "rs": 33065}}}, {"name": "ADIOS PRO 4", "div": "FTW", "estoque": 911, "agend": 228, "woh": 41, "real_jul": 22, "vendas": [317, 348, 401, 389, 563, 343], "proj": [{"mes": "2026-07", "cart": 24, "vest": 418}, {"mes": "2026-08", "cart": 450, "vest": 424}, {"mes": "2026-09", "cart": 840, "vest": 406}, {"mes": "2026-10", "cart": 72, "vest": 414}, {"mes": "2026-11", "cart": 1932, "vest": 414}], "by_state": {"SC": {"est": 170, "agd": 60, "cart_jul": 0, "real_jul": 2, "rs": 10595}, "SP": {"est": 413, "agd": 120, "cart_jul": 24, "real_jul": 16, "rs": 34103}, "RJ": {"est": 328, "agd": 48, "cart_jul": 0, "real_jul": 4, "rs": 21374}}}, {"name": "SUPERSTAR II BRANCO", "div": "FTW", "estoque": 911, "agend": 20, "woh": 16, "real_jul": 56, "vendas": [199, 234, 251, 176, 221, 258], "proj": [{"mes": "2026-07", "cart": 0, "vest": 230}, {"mes": "2026-08", "cart": 612, "vest": 237}, {"mes": "2026-09", "cart": 0, "vest": 239}, {"mes": "2026-10", "cart": 600, "vest": 237}, {"mes": "2026-11", "cart": 570, "vest": 238}], "by_state": {"SC": {"est": 295, "agd": 0, "cart_jul": 0, "real_jul": 10, "rs": 9510}, "SP": {"est": 471, "agd": 20, "cart_jul": 0, "real_jul": 28, "rs": 22065}, "RJ": {"est": 145, "agd": 0, "cart_jul": 0, "real_jul": 18, "rs": 11603}}}, {"name": "CAMPUS PRETO", "div": "FTW", "estoque": 1161, "agend": 0, "woh": 37, "real_jul": 31, "vendas": [280, 256, 241, 184, 223, 148], "proj": [{"mes": "2026-07", "cart": 0, "vest": 178}, {"mes": "2026-08", "cart": 0, "vest": 178}, {"mes": "2026-09", "cart": 0, "vest": 172}, {"mes": "2026-10", "cart": 0, "vest": 175}, {"mes": "2026-11", "cart": 0, "vest": 175}], "by_state": {"SC": {"est": 703, "agd": 0, "cart_jul": 0, "real_jul": 15, "rs": 10412}, "SP": {"est": 127, "agd": 0, "cart_jul": 0, "real_jul": 9, "rs": 8830}, "RJ": {"est": 331, "agd": 0, "cart_jul": 0, "real_jul": 7, "rs": 5861}}}, {"name": "CAMPUS CINZA", "div": "FTW", "estoque": 330, "agend": 0, "woh": 30, "real_jul": 11, "vendas": [232, 207, 205, 143, 153, 117], "proj": [{"mes": "2026-07", "cart": 0, "vest": 133}, {"mes": "2026-08", "cart": 0, "vest": 132}, {"mes": "2026-09", "cart": 0, "vest": 65}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 40, "agd": 0, "cart_jul": 0, "real_jul": 0, "rs": 0}, "SP": {"est": 226, "agd": 0, "cart_jul": 0, "real_jul": 4, "rs": 2736}, "RJ": {"est": 64, "agd": 0, "cart_jul": 0, "real_jul": 7, "rs": 6169}}}, {"name": "CAMPUS", "div": "FTW", "estoque": 248, "agend": 0, "woh": 17, "real_jul": 15, "vendas": [453, 336, 194, 207, 245, 142], "proj": [{"mes": "2026-07", "cart": 18, "vest": 186}, {"mes": "2026-08", "cart": 1056, "vest": 185}, {"mes": "2026-09", "cart": 249, "vest": 177}, {"mes": "2026-10", "cart": 0, "vest": 181}, {"mes": "2026-11", "cart": 0, "vest": 181}], "by_state": {"SC": {"est": 90, "agd": 0, "cart_jul": 0, "real_jul": 3, "rs": 1772}, "SP": {"est": 111, "agd": 0, "cart_jul": 18, "real_jul": 8, "rs": 6037}, "RJ": {"est": 47, "agd": 0, "cart_jul": 0, "real_jul": 4, "rs": 2949}}}, {"name": "ADISTAR", "div": "FTW", "estoque": 1546, "agend": 201, "woh": 34, "real_jul": 45, "vendas": [151, 187, 161, 180, 187, 157], "proj": [{"mes": "2026-07", "cart": 512, "vest": 171}, {"mes": "2026-08", "cart": 702, "vest": 170}, {"mes": "2026-09", "cart": 3431, "vest": 168}, {"mes": "2026-10", "cart": 1859, "vest": 169}, {"mes": "2026-11", "cart": 858, "vest": 169}], "by_state": {"SC": {"est": 319, "agd": 27, "cart_jul": 40, "real_jul": 10, "rs": 9467}, "SP": {"est": 695, "agd": 101, "cart_jul": 302, "real_jul": 18, "rs": 15099}, "RJ": {"est": 532, "agd": 73, "cart_jul": 170, "real_jul": 17, "rs": 12636}}}, {"name": "SUPERSTAR II PRETO", "div": "FTW", "estoque": 189, "agend": 0, "woh": 32, "real_jul": 6, "vendas": [130, 146, 102, 91, 113, 62], "proj": [{"mes": "2026-07", "cart": 0, "vest": 83}, {"mes": "2026-08", "cart": 654, "vest": 83}, {"mes": "2026-09", "cart": 0, "vest": 79}, {"mes": "2026-10", "cart": 498, "vest": 81}, {"mes": "2026-11", "cart": 576, "vest": 81}], "by_state": {"SC": {"est": 30, "agd": 0, "cart_jul": 0, "real_jul": 2, "rs": 1200}, "SP": {"est": 110, "agd": 0, "cart_jul": 0, "real_jul": 1, "rs": 2910}, "RJ": {"est": 49, "agd": 0, "cart_jul": 0, "real_jul": 3, "rs": 1650}}}, {"name": "CAMISETA MASCULINA ORIGINALS", "div": "APP", "estoque": 31627, "agend": 10282, "woh": 20, "real_jul": 1549, "vendas": [9505, 7833, 7544, 8046, 9283, 9694], "proj": [{"mes": "2026-07", "cart": 2007, "vest": 9241}, {"mes": "2026-08", "cart": 11194, "vest": 9385}, {"mes": "2026-09", "cart": 23094, "vest": 9404}, {"mes": "2026-10", "cart": 13395, "vest": 9366}, {"mes": "2026-11", "cart": 8916, "vest": 9381}], "by_state": {"SC": {"est": 6452, "agd": 1386, "cart_jul": 522, "real_jul": 209, "rs": 44675}, "SP": {"est": 13824, "agd": 5161, "cart_jul": 849, "real_jul": 770, "rs": 164924}, "RJ": {"est": 11351, "agd": 3735, "cart_jul": 636, "real_jul": 570, "rs": 119930}}}, {"name": "CAMISETA COB", "div": "APP", "estoque": 9979, "agend": 1828, "woh": 5, "real_jul": 2063, "vendas": [0, 0, 0, 0, 2136, 9850], "proj": [{"mes": "2026-07", "cart": 0, "vest": 5566}, {"mes": "2026-08", "cart": 0, "vest": 6165}, {"mes": "2026-09", "cart": 0, "vest": 76}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 1800, "vest": 1256}], "by_state": {"SC": {"est": 1850, "agd": 892, "cart_jul": 0, "real_jul": 281, "rs": 117412}, "SP": {"est": 4837, "agd": 193, "cart_jul": 0, "real_jul": 930, "rs": 391301}, "RJ": {"est": 3292, "agd": 743, "cart_jul": 0, "real_jul": 852, "rs": 363686}}}, {"name": "CAMISETA PERFORMANCE", "div": "APP", "estoque": 19099, "agend": 4278, "woh": 25, "real_jul": 756, "vendas": [6388, 5105, 5575, 5485, 5497, 5620], "proj": [{"mes": "2026-07", "cart": 3816, "vest": 5556}, {"mes": "2026-08", "cart": 3750, "vest": 5563}, {"mes": "2026-09", "cart": 10566, "vest": 5572}, {"mes": "2026-10", "cart": 5982, "vest": 5566}, {"mes": "2026-11", "cart": 13740, "vest": 5567}], "by_state": {"SC": {"est": 5813, "agd": 975, "cart_jul": 804, "real_jul": 157, "rs": 34769}, "SP": {"est": 7433, "agd": 1734, "cart_jul": 2004, "real_jul": 298, "rs": 60807}, "RJ": {"est": 5853, "agd": 1569, "cart_jul": 1008, "real_jul": 301, "rs": 59147}}}, {"name": "FEDS ALEMANHA II", "div": "FTW", "estoque": 907, "agend": 0, "woh": 27, "real_jul": 33, "vendas": [0, 0, 142, 188, 151, 184], "proj": [{"mes": "2026-07", "cart": 0, "vest": 175}, {"mes": "2026-08", "cart": 0, "vest": 173}, {"mes": "2026-09", "cart": 0, "vest": 176}, {"mes": "2026-10", "cart": 0, "vest": 175}, {"mes": "2026-11", "cart": 0, "vest": 175}], "by_state": {"SC": {"est": 163, "agd": 0, "cart_jul": 0, "real_jul": 2, "rs": 1530}, "SP": {"est": 495, "agd": 0, "cart_jul": 0, "real_jul": 22, "rs": 7319}, "RJ": {"est": 249, "agd": 0, "cart_jul": 0, "real_jul": 9, "rs": 6149}}}, {"name": "FEDS JAPAO II", "div": "FTW", "estoque": 141, "agend": 0, "woh": 2, "real_jul": 63, "vendas": [0, 0, 242, 446, 352, 576], "proj": [{"mes": "2026-07", "cart": 0, "vest": 141}, {"mes": "2026-08", "cart": 0, "vest": 0}, {"mes": "2026-09", "cart": 0, "vest": 0}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 55, "agd": 0, "cart_jul": 0, "real_jul": 12, "rs": 7794}, "SP": {"est": 40, "agd": 0, "cart_jul": 0, "real_jul": 40, "rs": 18765}, "RJ": {"est": 46, "agd": 0, "cart_jul": 0, "real_jul": 11, "rs": 6244}}}, {"name": "FEDS ARGENTINA II", "div": "FTW", "estoque": 491, "agend": 0, "woh": 12, "real_jul": 40, "vendas": [0, 0, 214, 216, 113, 268], "proj": [{"mes": "2026-07", "cart": 0, "vest": 211}, {"mes": "2026-08", "cart": 0, "vest": 208}, {"mes": "2026-09", "cart": 0, "vest": 72}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 186, "agd": 0, "cart_jul": 0, "real_jul": 2, "rs": 1638}, "SP": {"est": 169, "agd": 0, "cart_jul": 0, "real_jul": 17, "rs": 7415}, "RJ": {"est": 136, "agd": 0, "cart_jul": 0, "real_jul": 21, "rs": 11938}}}, {"name": "FEDS ESPANHA II", "div": "FTW", "estoque": 520, "agend": 17, "woh": 6, "real_jul": 91, "vendas": [0, 0, 278, 470, 444, 601], "proj": [{"mes": "2026-07", "cart": 0, "vest": 528}, {"mes": "2026-08", "cart": 0, "vest": 9}, {"mes": "2026-09", "cart": 0, "vest": 0}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 179, "agd": 0, "cart_jul": 0, "real_jul": 8, "rs": 3600}, "SP": {"est": 245, "agd": 0, "cart_jul": 0, "real_jul": 43, "rs": 19952}, "RJ": {"est": 96, "agd": 17, "cart_jul": 0, "real_jul": 40, "rs": 18841}}}, {"name": "FEDS ITALIA II", "div": "FTW", "estoque": 392, "agend": 0, "woh": 28, "real_jul": 14, "vendas": [0, 0, 156, 153, 98, 89], "proj": [{"mes": "2026-07", "cart": 0, "vest": 104}, {"mes": "2026-08", "cart": 0, "vest": 98}, {"mes": "2026-09", "cart": 0, "vest": 98}, {"mes": "2026-10", "cart": 0, "vest": 92}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 78, "agd": 0, "cart_jul": 0, "real_jul": 0, "rs": 0}, "SP": {"est": 219, "agd": 0, "cart_jul": 0, "real_jul": 11, "rs": 4593}, "RJ": {"est": 95, "agd": 0, "cart_jul": 0, "real_jul": 3, "rs": 2963}}}, {"name": "FEDS ALEMANHA I", "div": "FTW", "estoque": 64, "agend": 0, "woh": 6, "real_jul": 10, "vendas": [141, 87, 78, 63, 69, 84], "proj": [{"mes": "2026-07", "cart": 0, "vest": 64}, {"mes": "2026-08", "cart": 0, "vest": 0}, {"mes": "2026-09", "cart": 0, "vest": 0}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 3, "agd": 0, "cart_jul": 0, "real_jul": 0, "rs": 0}, "SP": {"est": 52, "agd": 0, "cart_jul": 0, "real_jul": 11, "rs": 4138}, "RJ": {"est": 9, "agd": 0, "cart_jul": 0, "real_jul": -1, "rs": 400}}}, {"name": "FEDS JAPAO I", "div": "FTW", "estoque": 57, "agend": 73, "woh": 10, "real_jul": 6, "vendas": [94, 57, 44, 72, 59, 117], "proj": [{"mes": "2026-07", "cart": 0, "vest": 91}, {"mes": "2026-08", "cart": 0, "vest": 39}, {"mes": "2026-09", "cart": 0, "vest": 0}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 7, "agd": 0, "cart_jul": 0, "real_jul": 1, "rs": 400}, "SP": {"est": 11, "agd": 37, "cart_jul": 0, "real_jul": 5, "rs": 2000}, "RJ": {"est": 39, "agd": 36, "cart_jul": 0, "real_jul": 0, "rs": 0}}}, {"name": "FEDS ARGENTINA I", "div": "FTW", "estoque": 550, "agend": 63, "woh": 7, "real_jul": 77, "vendas": [363, 246, 190, 116, 127, 370], "proj": [{"mes": "2026-07", "cart": 0, "vest": 246}, {"mes": "2026-08", "cart": 0, "vest": 259}, {"mes": "2026-09", "cart": 0, "vest": 108}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 289, "agd": 35, "cart_jul": 0, "real_jul": 12, "rs": 4800}, "SP": {"est": 75, "agd": 18, "cart_jul": 0, "real_jul": 25, "rs": 10622}, "RJ": {"est": 186, "agd": 10, "cart_jul": 0, "real_jul": 40, "rs": 18831}}}, {"name": "FEDS ESPANHA I", "div": "FTW", "estoque": 209, "agend": 59, "woh": 13, "real_jul": 16, "vendas": [124, 59, 54, 49, 35, 76], "proj": [{"mes": "2026-07", "cart": 0, "vest": 58}, {"mes": "2026-08", "cart": 0, "vest": 59}, {"mes": "2026-09", "cart": 0, "vest": 62}, {"mes": "2026-10", "cart": 0, "vest": 60}, {"mes": "2026-11", "cart": 0, "vest": 29}], "by_state": {"SC": {"est": 32, "agd": 0, "cart_jul": 0, "real_jul": 5, "rs": 2800}, "SP": {"est": 130, "agd": 30, "cart_jul": 0, "real_jul": 9, "rs": 4345}, "RJ": {"est": 47, "agd": 29, "cart_jul": 0, "real_jul": 2, "rs": 710}}}, {"name": "FEDS ITALIA I", "div": "FTW", "estoque": 47, "agend": 0, "woh": 24, "real_jul": 2, "vendas": [87, 41, 28, 12, 14, 27], "proj": [{"mes": "2026-07", "cart": 0, "vest": 20}, {"mes": "2026-08", "cart": 0, "vest": 21}, {"mes": "2026-09", "cart": 0, "vest": 6}, {"mes": "2026-10", "cart": 0, "vest": 0}, {"mes": "2026-11", "cart": 0, "vest": 0}], "by_state": {"SC": {"est": 5, "agd": 0, "cart_jul": 0, "real_jul": 0, "rs": 0}, "SP": {"est": 41, "agd": 0, "cart_jul": 0, "real_jul": 2, "rs": 640}, "RJ": {"est": 1, "agd": 0, "cart_jul": 0, "real_jul": 0, "rs": 0}}}, {"name": "ADIMULE", "div": "FTW", "estoque": 1265, "agend": 0, "woh": 53, "real_jul": 24, "vendas": [139, 266, 190, 166, 141, 158], "proj": [{"mes": "2026-07", "cart": 0, "vest": 154}, {"mes": "2026-08", "cart": 120, "vest": 153}, {"mes": "2026-09", "cart": 660, "vest": 154}, {"mes": "2026-10", "cart": 0, "vest": 154}, {"mes": "2026-11", "cart": 396, "vest": 154}], "by_state": {"SC": {"est": 306, "agd": 0, "cart_jul": 0, "real_jul": 4, "rs": 4200}, "SP": {"est": 598, "agd": 0, "cart_jul": 0, "real_jul": 14, "rs": 9139}, "RJ": {"est": 361, "agd": 0, "cart_jul": 0, "real_jul": 6, "rs": 5036}}}, {"name": "DROPSET", "div": "FTW", "estoque": 1177, "agend": 321, "woh": 17, "real_jul": 70, "vendas": [392, 511, 297, 359, 303, 351], "proj": [{"mes": "2026-07", "cart": 146, "vest": 338}, {"mes": "2026-08", "cart": 42, "vest": 335}, {"mes": "2026-09", "cart": 1583, "vest": 339}, {"mes": "2026-10", "cart": 150, "vest": 338}, {"mes": "2026-11", "cart": 258, "vest": 338}], "by_state": {"SC": {"est": 223, "agd": 72, "cart_jul": 84, "real_jul": 11, "rs": 10754}, "SP": {"est": 620, "agd": 105, "cart_jul": 62, "real_jul": 24, "rs": 28379}, "RJ": {"est": 334, "agd": 144, "cart_jul": 0, "real_jul": 35, "rs": 35520}}}, {"name": "GAZELLE", "div": "FTW", "estoque": 1065, "agend": 18, "woh": 18, "real_jul": 60, "vendas": [735, 733, 698, 553, 656, 431], "proj": [{"mes": "2026-07", "cart": 0, "vest": 523}, {"mes": "2026-08", "cart": 522, "vest": 522}, {"mes": "2026-09", "cart": 1380, "vest": 504}, {"mes": "2026-10", "cart": 632, "vest": 513}, {"mes": "2026-11", "cart": 978, "vest": 512}], "by_state": {"SC": {"est": 218, "agd": 0, "cart_jul": 0, "real_jul": 15, "rs": 9976}, "SP": {"est": 582, "agd": 0, "cart_jul": 0, "real_jul": 36, "rs": 29773}, "RJ": {"est": 265, "agd": 18, "cart_jul": 0, "real_jul": 9, "rs": 8960}}}, {"name": "HYPERBOOST", "div": "FTW", "estoque": 873, "agend": 249, "woh": 11, "real_jul": 76, "vendas": [0, 0, 0, 412, 371, 392], "proj": [{"mes": "2026-07", "cart": 3, "vest": 390}, {"mes": "2026-08", "cart": 1890, "vest": 387}, {"mes": "2026-09", "cart": 2205, "vest": 389}, {"mes": "2026-10", "cart": 1257, "vest": 389}, {"mes": "2026-11", "cart": 439, "vest": 389}], "by_state": {"SC": {"est": 218, "agd": 67, "cart_jul": 0, "real_jul": 16, "rs": 23772}, "SP": {"est": 388, "agd": 101, "cart_jul": 3, "real_jul": 29, "rs": 54178}, "RJ": {"est": 267, "agd": 81, "cart_jul": 0, "real_jul": 31, "rs": 57056}}}], "agendamentos": [{"name": "EVOSL", "total": 2826, "by_week": {"2026-W28": 1576, "2026-W29": 129, "Sem data": 1121}, "by_status": {"AGUARDANDO FATURAMENTO": 1100, "AGUARDANDO EXPEDIÇÃO": 163, "EXPEDIDO": 32, "EM TRÂNSITO - FORA DO PRAZO": 625, "EM TRÂNSITO - NO PRAZO": 906}}, {"name": "TRACK PANTS", "total": 1249, "by_week": {"2026-W28": 642, "2026-W29": 66, "Sem data": 541}, "by_status": {"AGUARDANDO FATURAMENTO": 541, "AGUARDANDO EXPEDIÇÃO": 69, "EM TRÂNSITO - FORA DO PRAZO": 227, "EM TRÂNSITO - NO PRAZO": 412}}, {"name": "SL 72", "total": 1128, "by_week": {"2026-W28": 897, "2026-W29": 80, "Sem data": 151}, "by_status": {"AGUARDANDO FATURAMENTO": 115, "EXPEDIDO": 42, "AGUARDANDO EXPEDIÇÃO": 102, "EM TRÂNSITO - NO PRAZO": 698, "EM TRÂNSITO - FORA DO PRAZO": 171}}, {"name": "SAMBA", "total": 4724, "by_week": {"2026-W28": 2990, "2026-W29": 372, "Sem data": 1362}, "by_status": {"AGUARDANDO FATURAMENTO": 1271, "AGUARDANDO EXPEDIÇÃO": 268, "EM TRÂNSITO - NO PRAZO": 2777, "EM TRÂNSITO - FORA DO PRAZO": 408}}, {"name": "SPEZIAL", "total": 2487, "by_week": {"2026-W28": 1091, "2026-W29": 211, "Sem data": 1185}, "by_status": {"AGUARDANDO FATURAMENTO": 1148, "EXPEDIDO": 1, "AGUARDANDO EXPEDIÇÃO": 111, "EM TRÂNSITO - NO PRAZO": 1118, "EM TRÂNSITO - FORA DO PRAZO": 109}}, {"name": "SAMBA BRANCO", "total": 770, "by_week": {"2026-W28": 741, "2026-W29": 25, "Sem data": 4}, "by_status": {"AGUARDANDO FATURAMENTO": 4, "AGUARDANDO EXPEDIÇÃO": 127, "EM TRÂNSITO - FORA DO PRAZO": 23, "EM TRÂNSITO - NO PRAZO": 616}}, {"name": "SAMBA JANE", "total": 1517, "by_week": {"2026-W28": 1231, "2026-W29": 127, "Sem data": 159}, "by_status": {"AGUARDANDO FATURAMENTO": 137, "AGUARDANDO EXPEDIÇÃO": 139, "EXPEDIDO": 18, "EM TRÂNSITO - FORA DO PRAZO": 408, "EM TRÂNSITO - NO PRAZO": 815}}, {"name": "TRACK SHORTS", "total": 60, "by_week": {"2026-W28": 60}, "by_status": {"AGUARDANDO EXPEDIÇÃO": 36, "EM TRÂNSITO - FORA DO PRAZO": 24}}, {"name": "DRIVE RC", "total": 673, "by_week": {"2026-W28": 288, "2026-W29": 18, "Sem data": 367}, "by_status": {"AGUARDANDO FATURAMENTO": 367, "AGUARDANDO EXPEDIÇÃO": 32, "EXPEDIDO": 12, "EM TRÂNSITO - FORA DO PRAZO": 179, "EM TRÂNSITO - NO PRAZO": 83}}, {"name": "ADIOS PRO 4", "total": 228, "by_week": {"2026-W28": 139, "2026-W29": 41, "Sem data": 48}, "by_status": {"AGUARDANDO FATURAMENTO": 48, "AGUARDANDO EXPEDIÇÃO": 67, "EXPEDIDO": 1, "EM TRÂNSITO - FORA DO PRAZO": 72, "EM TRÂNSITO - NO PRAZO": 40}}, {"name": "SUPERSTAR II BRANCO", "total": 20, "by_week": {"2026-W28": 20}, "by_status": {"EM TRÂNSITO - FORA DO PRAZO": 18, "EM TRÂNSITO - NO PRAZO": 2}}, {"name": "ADISTAR", "total": 201, "by_week": {"Sem data": 201}, "by_status": {"AGUARDANDO FATURAMENTO": 201}}, {"name": "CAMISETA MASCULINA ORIGINALS", "total": 10282, "by_week": {"2026-W28": 1887, "2026-W29": 463, "Sem data": 7932}, "by_status": {"AGUARDANDO FATURAMENTO": 7932, "AGUARDANDO EXPEDIÇÃO": 198, "EXPEDIDO": 24, "EM TRÂNSITO - NO PRAZO": 1845, "EM TRÂNSITO - FORA DO PRAZO": 283}}, {"name": "CAMISETA COB", "total": 1828, "by_week": {"2026-W28": 1444, "2026-W29": 262, "Sem data": 122}, "by_status": {"AGUARDANDO FATURAMENTO": 101, "EXPEDIDO": 2, "AGUARDANDO EXPEDIÇÃO": 10, "EXTRAVIO": 21, "EM TRÂNSITO - NO PRAZO": 1169, "EM TRÂNSITO - FORA DO PRAZO": 525}}, {"name": "CAMISETA PERFORMANCE", "total": 4278, "by_week": {"2026-W28": 1379, "2026-W29": 168, "Sem data": 2731}, "by_status": {"AGUARDANDO FATURAMENTO": 2731, "EXPEDIDO": 132, "AGUARDANDO EXPEDIÇÃO": 355, "EM TRÂNSITO - NO PRAZO": 644, "EM TRÂNSITO - FORA DO PRAZO": 416}}, {"name": "FEDS ESPANHA II", "total": 17, "by_week": {"2026-W28": 17}, "by_status": {"EM TRÂNSITO - FORA DO PRAZO": 17}}, {"name": "FEDS JAPAO I", "total": 73, "by_week": {"2026-W28": 73}, "by_status": {"EM TRÂNSITO - FORA DO PRAZO": 55, "EM TRÂNSITO - NO PRAZO": 18}}, {"name": "FEDS ARGENTINA I", "total": 63, "by_week": {"2026-W28": 63}, "by_status": {"EM TRÂNSITO - NO PRAZO": 53, "EM TRÂNSITO - FORA DO PRAZO": 10}}, {"name": "FEDS ESPANHA I", "total": 59, "by_week": {"2026-W28": 59}, "by_status": {"AGUARDANDO EXPEDIÇÃO": 3, "EM TRÂNSITO - FORA DO PRAZO": 36, "EM TRÂNSITO - NO PRAZO": 20}}, {"name": "DROPSET", "total": 321, "by_week": {"2026-W28": 281, "2026-W29": 24, "Sem data": 16}, "by_status": {"AGUARDANDO FATURAMENTO": 16, "AGUARDANDO EXPEDIÇÃO": 51, "EXPEDIDO": 23, "EM TRÂNSITO - NO PRAZO": 138, "EM TRÂNSITO - FORA DO PRAZO": 93}}, {"name": "GAZELLE", "total": 18, "by_week": {"2026-W28": 17, "Sem data": 1}, "by_status": {"AGUARDANDO FATURAMENTO": 1, "EM TRÂNSITO - FORA DO PRAZO": 17}}, {"name": "HYPERBOOST", "total": 249, "by_week": {"2026-W28": 148, "2026-W29": 30, "Sem data": 71}, "by_status": {"AGUARDANDO FATURAMENTO": 71, "AGUARDANDO EXPEDIÇÃO": 54, "EM TRÂNSITO - FORA DO PRAZO": 39, "EM TRÂNSITO - NO PRAZO": 85}}]};
+
+const META_RS        = DATA.meta_rs;
+const REALIZ_RS      = DATA.realizado_rs;
+const REALIZ_RS_FAMS = DATA.realizado_rs_fams||0;
+const META_SALDO_RS  = DATA.meta_saldo_rs||0;
+const PROJ_RS    = DATA.dia_corte > 0 ? Math.round(REALIZ_RS / DATA.dia_corte * DATA.dias_no_mes) : 0;
+
+var families = DATA.families.map(f => {
+  const p = f.proj || [];
+  const v0 = p[0] ? p[0].vest : 0;
+  const c0 = p[0] ? p[0].cart : 0;
+  const ritmo = DATA.dia_corte > 0 ? Math.round((f.real_jul||0) / DATA.dia_corte * DATA.dias_no_mes) : 0;
+  return Object.assign({}, f, {
+    cart_jul:  c0,
+    vest_jul:  v0,
+    cart_ago:  p[1] ? p[1].cart : 0,
+    vest_ago:  p[1] ? p[1].vest : 0,
+    cart_set:  p[2] ? p[2].cart : 0,
+    vest_set:  p[2] ? p[2].vest : 0,
+    cart_out:  p[3] ? p[3].cart : 0,
+    vest_out:  p[3] ? p[3].vest : 0,
+    cart_nov:  p[4] ? p[4].cart : 0,
+    vest_nov:  p[4] ? p[4].vest : 0,
+    est_prop:       DATA.dias_no_mes > 0 ? Math.round(v0 * DATA.dia_corte / DATA.dias_no_mes) : 0,
+    ritmo_jul:      ritmo,
+    ritmo_jul_real: ritmo,
+    saldo_est:   (f.estoque||0) + (f.agend||0) + c0 - v0,
+    saldo_ritmo: (f.estoque||0) + (f.agend||0) + c0 - ritmo,
+    venda_media: (function(v){var nz=v.filter(function(x){return x>0});return nz.length?Math.round(nz.reduce(function(a,b){return a+b},0)/nz.length):0})(f.vendas),
+  });
+});
+families.forEach(function(f){
+  f.score   = healthScore(f);
+  f.status  = isEstrela(f) ? 'estrela' : getStatus(f);
+});
+
+document.getElementById('tagDate').textContent = DATA.date;
+document.getElementById('rankTitle').textContent = 'Ranking · ' + families.length + ' Famílias';
+
+function getStatus(f){
+  if(f.woh===0) return 'semgiro';
+  if(f.woh<9)  return 'ruptura';
+  if(f.woh>=16) return 'excesso';
+  return 'ok';
+}
+function isEstrela(f){
+  var mai=f.vendas[4]; var ritmo=f.est_prop/DATA.dia_corte*31;
+  return mai>0&&ritmo>mai*1.1;
+}
+function healthScore(f){
+  var w=f.woh,ws2;
+  if(w===0) ws2=5;
+  else if(w<9) ws2=10+(w/9)*40;
+  else if(w<=16) ws2=100;
+  else if(w<=30) ws2=100-((w-16)/14)*40;
+  else ws2=Math.max(5,60-((w-30)/140)*55);
+  var v=f.vendas,cur=v[4]||v[3]||0,prv=v[3]||v[2]||0;
+  var trend=prv>0?(cur-prv)/prv:0;
+  return Math.min(100,Math.max(2,Math.round(ws2+Math.min(8,Math.max(-8,trend*20)))));
+}
+function statusColor(st){return{ok:'#10b981',ruptura:'#ef4444',excesso:'#f97316',semgiro:'#64748b',estrela:'#a855f7'}[st]||'#64748b'}
+function statusLabel(st){return{ok:'OK',ruptura:'RUPTURA',excesso:'EXCESSO',semgiro:'SEM GIRO',estrela:'ESTRELA'}[st]||st}
+function badgeClass(st){return{ok:'badge-ok',ruptura:'badge-ruptura',excesso:'badge-excesso',semgiro:'badge-semgiro',estrela:'badge-estrela'}[st]||'badge-semgiro'}
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1).replace('.',',')+' M';if(n>=1e3)return Math.round(n/1e3)+'k';return String(n)}
+
+var _familiesOrig = families.slice();
+var selectedState = 'all';
+var totalEst, totalAgend, wohMedia, nRuptura, nExcesso, nEstrela;
+function recomputeGlobals(){
+  totalEst  = families.reduce(function(a,f){return a+f.estoque},0);
+  totalAgend= families.reduce(function(a,f){return a+f.agend},0);
+  wohMedia  = families.length ? Math.round(families.reduce(function(a,f){return a+f.woh},0)/families.length) : 0;
+  nRuptura  = families.filter(function(f){return f.status==='ruptura'}).length;
+  nExcesso  = families.filter(function(f){return f.status==='excesso'}).length;
+  nEstrela  = families.filter(function(f){return f.status==='estrela'}).length;
+}
+recomputeGlobals();
+
+function setStateFilter(state, btn){
+  selectedState = state;
+  document.querySelectorAll('.state-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  if(state==='all'){
+    families = _familiesOrig;
+  } else {
+    families = _familiesOrig.map(function(f){
+      var s=(f.by_state||{})[state]||{};
+      var est=s.est||0, agend=s.agd||0, cart=s.cart_jul||0, real=s.real_jul||0;
+      var ritmo=DATA.dia_corte>0?Math.round(real/DATA.dia_corte*DATA.dias_no_mes):0;
+      var estTot=f.estoque||1;
+      var vestFrac=estTot>0?est/estTot:0;
+      var vest=Math.round((f.vest_jul||0)*vestFrac);
+      var vsSem=DATA.dias_periodo>0?(real/DATA.dias_periodo*7):0;
+      if(vsSem===0){
+        // sem vendas neste estado ainda: usa taxa total proporcional ao estoque do estado
+        var vsSemTot=DATA.dias_periodo>0?((f.real_jul||0)/DATA.dias_periodo*7):0;
+        vsSem=estTot>0&&vsSemTot>0?vsSemTot*est/estTot:0;
+      }
+      var woh=vsSem>0?Math.round(est/vsSem):0;
+      var nf=Object.assign({},f,{
+        estoque:est, agend:agend, cart_jul:cart, real_jul:real,
+        ritmo_jul:ritmo, ritmo_jul_real:ritmo, vest_jul:vest,
+        saldo_est:est+agend+cart-vest, saldo_ritmo:est+agend+cart-ritmo, woh:woh,
+      });
+      nf.score=healthScore(nf);
+      nf.status=isEstrela(nf)?'estrela':getStatus(nf);
+      return nf;
+    });
+  }
+  recomputeGlobals();
+  document.getElementById('stateNote').style.display = state==='all'?'none':'inline';
+  renderKPIs(); renderKPIsRS(); renderRanking(); renderAlerts();
+  if(selIdx>=0&&families[selIdx]) renderDetail(families[selIdx]);
+  if(viewMode==='cards') renderCards();
+}
+
+function renderKPIs(){
+  var pct=Math.round(REALIZ_RS/META_RS*100);
+  var projPct=Math.round(PROJ_RS/META_RS*100);
+  var kpis=[
+    {l:'Estoque Total ('+families.length+' fam.)',v:totalEst.toLocaleString('pt-BR')+' pcs',s:'+'+totalAgend.toLocaleString('pt-BR')+' agendados',c:'kpi-b'},
+    {l:'WOH Médio',v:wohMedia+' sem',s:'Ideal: 8–16 semanas',c:wohMedia>20?'kpi-a':'kpi-g'},
+    {l:'Realizado '+DATA.mes_nome+' ('+DATA.dia_corte+' dias)',v:'R$ '+fmt(REALIZ_RS),s:pct+'% da meta',c:'kpi-g'},
+    {l:'Projeção Ritmo '+DATA.mes_nome,v:'R$ '+fmt(PROJ_RS),s:projPct+'% da meta',c:projPct>=95?'kpi-g':projPct>=80?'kpi-a':'kpi-r'},
+    {l:'Famílias Ruptura',v:String(nRuptura),s:'WOH < 9 semanas',c:'kpi-r'},
+    {l:'Excesso / Estrela',v:nExcesso+' / '+nEstrela,s:'WOH ≥ 16 sem / crescimento',c:'kpi-a'},
+  ];
+  document.getElementById('kpiBar').innerHTML=kpis.map(function(k){
+    return '<div class="kpi"><div class="kpi-label">'+k.l+'</div><div class="kpi-val '+k.c+'">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';
+  }).join('');
+}
+function renderKPIsRS(){
+  var propSaldo = DATA.dias_no_mes > 0 ? Math.round(META_SALDO_RS * DATA.dia_corte / DATA.dias_no_mes) : 0;
+  var pctFamsVsMeta  = META_RS > 0 ? Math.round(REALIZ_RS_FAMS / META_RS * 100) : 0;
+  var pctFamsVsProp  = propSaldo > 0 ? Math.round(REALIZ_RS_FAMS / propSaldo * 100) : 0;
+  var kpis=[
+    {l:'Meta '+DATA.mes_nome+' (geral)',          v:'R$ '+fmt(META_RS),        s:'Budget total do mês',                           c:'kpi-b'},
+    {l:'Realizado até dia '+DATA.dia_corte+' (geral)', v:'R$ '+fmt(REALIZ_RS), s:Math.round(REALIZ_RS/META_RS*100)+'% da meta geral',  c:REALIZ_RS/META_RS>=0.8?'kpi-g':'kpi-a'},
+    {l:'Realizado até dia '+DATA.dia_corte+' (famílias)', v:'R$ '+fmt(REALIZ_RS_FAMS), s:pctFamsVsMeta+'% da meta geral',         c:pctFamsVsMeta>=70?'kpi-g':'kpi-a'},
+    {l:'Meta Saldo Teórico (vest. estimada)',       v:'R$ '+fmt(META_SALDO_RS), s:'Se vender tudo previsto em Jul',                c:'kpi-b'},
+    {l:'Realizado vs previsão proporcional',        v:pctFamsVsProp+'%',        s:'R$ '+fmt(REALIZ_RS_FAMS)+' de R$ '+fmt(propSaldo)+' esperados',  c:pctFamsVsProp>=100?'kpi-g':pctFamsVsProp>=70?'kpi-a':'kpi-r'},
+  ];
+  var cls=['meta-geral','meta-geral','meta-fam','meta-geral','meta-fam'];
+  document.getElementById('kpiBarRS').innerHTML=kpis.map(function(k,i){
+    return '<div class="kpi '+cls[i]+'"><div class="kpi-label">'+k.l+'</div><div class="kpi-val '+k.c+'">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';
+  }).join('');
+}
+
+var sortKey='score', selIdx=-1, filtKey='all', divKey='all';
+function setSort(key,btn){
+  sortKey=key;
+  document.querySelectorAll('.sort-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  renderRanking();
+}
+function setFilt(key,btn){
+  filtKey=key;
+  document.querySelectorAll('.filt-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  renderRanking();
+}
+function setDiv(key,btn){
+  divKey=key;
+  document.querySelectorAll('.div-btn').forEach(function(b){
+    b.className=b.className.replace(/act-div-\S+/g,'').trim();
+  });
+  btn.classList.add('act-div-'+key);
+  renderRanking();
+}
+function isFeds(f){return f.name.toUpperCase().indexOf('FEDS')>=0}
+function isFtw(f){return (f.div||'FTW')==='FTW'}
+function isApp(f){return (f.div||'FTW')==='APP'}
+function getSorted(){
+  var arr=families.map(function(f,i){return Object.assign({},f,{origIdx:i})});
+  if(filtKey==='feds')  arr=arr.filter(isFeds);
+  else if(filtKey==='other') arr=arr.filter(function(f){return !isFeds(f)});
+  if(divKey==='ftw') arr=arr.filter(isFtw);
+  else if(divKey==='app') arr=arr.filter(isApp);
+  if(sortKey==='score')        arr.sort(function(a,b){return b.score-a.score});
+  else if(sortKey==='estoque') arr.sort(function(a,b){return b.estoque-a.estoque});
+  else if(sortKey==='woh_asc') arr.sort(function(a,b){return a.woh-b.woh});
+  else if(sortKey==='woh_desc')arr.sort(function(a,b){return b.woh-a.woh});
+  return arr;
+}
+function renderRanking(){
+  var sorted=getSorted();
+  var list=document.getElementById('rankingList');
+  list.innerHTML=sorted.map(function(f,rank){
+    var col=statusColor(f.status);
+    var tV=f.vendas[4]>0&&f.vendas[3]>0?(f.vendas[4]-f.vendas[3])/f.vendas[3]*100:0;
+    var tS=tV>5?'▲':tV<-5?'▼':'–';
+    var tC=tV>5?'#10b981':tV<-5?'#ef4444':'#64748b';
+    return '<div class="rank-item'+(f.origIdx===selIdx?' active':'')+'" onclick="selectFamily('+f.origIdx+')">'
+      +'<div class="rank-num">'+(rank+1)+'</div>'
+      +'<div class="status-dot" style="background:'+col+'"></div>'
+      +'<div class="rank-info">'
+        +'<div class="rank-name">'+f.name+'</div>'
+        +'<div class="rank-meta">'+f.estoque.toLocaleString('pt-BR')+' pcs · <span style="color:'+tC+'">'+tS+'</span></div>'
+        +'<div class="bar-track"><div class="bar-fill" style="width:'+f.score+'%;background:'+col+'88"></div></div>'
+      +'</div>'
+      +'<div class="rank-right">'
+        +'<div class="rank-woh" style="color:'+col+'">'+f.woh+'s</div>'
+        +'<canvas id="sp'+f.origIdx+'" width="52" height="18"></canvas>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+  requestAnimationFrame(function(){
+    sorted.forEach(function(f){
+      var c=document.getElementById('sp'+f.origIdx);
+      if(c) drawSparkline(c,f.vendas,statusColor(f.status));
+    });
+  });
+}
+
+function drawSparkline(canvas,data,color){
+  var ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  var nz=data.map(function(v,i){return{v:v,i:i}}).filter(function(x){return x.v>0});
+  if(nz.length<2) return;
+  var mx=Math.max.apply(null,nz.map(function(x){return x.v}));
+  var mn=Math.min.apply(null,nz.map(function(x){return x.v}));
+  var rng=mx-mn||1;
+  var pts=nz.map(function(x,ni){return{x:ni/(nz.length-1)*(W-4)+2,y:H-2-((x.v-mn)/rng)*(H-4)}});
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(function(p){ctx.lineTo(p.x,p.y)});
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();
+  var last=pts[pts.length-1];
+  ctx.beginPath();ctx.arc(last.x,last.y,2,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+}
+
+function selectFamily(idx){selIdx=idx;renderRanking();renderDetail(families[idx])}
+function selectByName(nm){var i=families.findIndex(function(f){return f.name===nm});if(i>=0)selectFamily(i)}
+
+function renderDetail(f){
+  var st=f.status,col=statusColor(st);
+  var ritmo=f.ritmo_jul;
+  var ritmoSem=Math.round(ritmo/4.33);
+  document.getElementById('detailPanel').innerHTML=
+    '<div class="detail-hdr"><div>'
+      +'<div class="detail-name">'+f.name+'</div>'
+      +'<div class="detail-cat">Análise · '+DATA.mes_nome+' '+DATA.ano+'</div>'
+    +'</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">'
+      +'<span class="status-badge '+badgeClass(st)+'">'+statusLabel(st)+'</span>'
+      +'<button class="resumo-btn" onclick="openResumo()">📋 Ver Resumo</button>'
+    +'</div></div>'
+    +'<div class="woh-section">'
+      +'<canvas class="woh-canvas" id="wg" width="80" height="80"></canvas>'
+      +'<div class="woh-info">'
+        +'<div class="woh-label">Weeks on Hand (WOH)</div>'
+        +'<div class="woh-val-big" style="color:'+col+'">'+f.woh+' <span style="font-size:14px;color:var(--muted)">semanas</span></div>'
+        +'<div class="woh-sub">'+wohInterpret(f.woh)+'</div>'
+        +'<div class="woh-scale">'+scaleSegs(f.woh)+'</div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-top:3px"><span>0</span><span>8</span><span>16</span><span>30</span><span>60+</span></div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="metrics-grid">'
+      +metCard('Estoque Atual',f.estoque.toLocaleString('pt-BR'),'pcs em loja',true)
+      +metCard('Agendamento',f.agend.toLocaleString('pt-BR'),'pcs a caminho')
+      +metCard('Ritmo '+DATA.mes_nome+'/mês',ritmo.toLocaleString('pt-BR'),'≈ '+ritmoSem+' pcs/sem',false,col)
+      +metCard('Venda Média Hist.',f.venda_media.toLocaleString('pt-BR'),'Jan–Mai')
+    +'</div>'
+    +'<div class="chart-section">'
+      +'<div class="chart-title">Desempenho Mensal — Histórico + Projeção'
+        +'<div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Histórico</div>'
+        +'<div class="legend-item"><div class="legend-dot" style="background:'+col+'88;border:1px dashed '+col+'"></div>Estimativa</div></div>'
+      +'</div>'
+      +'<canvas id="sc" width="540" height="160" style="display:block;max-width:100%"></canvas>'
+    +'</div>'
+    +'<div class="chart-section"><div class="chart-title">Análise '+DATA.mes_nome+' '+DATA.ano+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0">'
+        +julBlock('Carteira', f.cart_jul||0, 'var(--blue)')
+        +julBlock('Venda Estimada', f.vest_jul||ritmo, col)
+        +julBlock('Venda até '+DATA.dia_corte, f.real_jul||0, 'var(--text)')
+        +julBlock('Ritmo mês', ritmo, col)
+        +julBlock('Saldo c/ Estimada', f.saldo_est, f.saldo_est>=0?'var(--green)':'var(--red)')
+        +julBlock('Saldo c/ Ritmo', f.saldo_ritmo, f.saldo_ritmo>=0?'var(--green)':'var(--red)')
+      +'</div></div>'
+    +projTable(f,col)
+    +carteiraCard(f);
+  requestAnimationFrame(function(){
+    drawWOHGauge(document.getElementById('wg'),f.woh,col);
+    drawSalesChart(document.getElementById('sc'),f);
+  });
+}
+
+function metCard(lbl,val,sub,accent,valCol){
+  return '<div class="metric-card'+(accent?' accent':'')+'"><div class="metric-label">'+lbl+'</div>'
+    +'<div class="metric-val" style="color:'+(valCol||'var(--text)')+'">'+val+'</div>'
+    +'<div class="metric-sub">'+sub+'</div></div>';
+}
+function julBlock(lbl,val,vc){
+  return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:8px 6px;text-align:center">'
+    +'<div style="font-size:7.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lbl+'</div>'
+    +'<div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:'+vc+'">'+val.toLocaleString('pt-BR')+'</div>'
+  +'</div>';
+}
+function projTable(f,col){
+  var months=[
+    {nome:'Agosto',cart:f.cart_ago,vest:f.vest_ago},
+    {nome:'Setembro',cart:f.cart_set,vest:f.vest_set},
+    {nome:'Outubro',cart:f.cart_out,vest:f.vest_out},
+    {nome:'Novembro',cart:f.cart_nov,vest:f.vest_nov},
+  ];
+  var rows=months.map(function(m){
+    var pct=m.vest>0?Math.min(100,Math.round(m.cart/m.vest*100)):0;
+    var dc=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
+    return '<tr style="border-bottom:1px solid var(--border)30">'
+      +'<td style="padding:6px 10px;font-weight:600;color:var(--text)">'+m.nome+' '+DATA.ano+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;color:var(--blue);font-variant-numeric:tabular-nums;font-weight:700">'+m.cart.toLocaleString('pt-BR')+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--dim);font-weight:600">'+m.vest.toLocaleString('pt-BR')+'</td>'
+      +'<td style="padding:6px 10px;min-width:80px"><div style="height:5px;background:var(--border);border-radius:2px"><div style="height:100%;width:'+pct+'%;background:'+dc+';border-radius:2px"></div></div>'
+      +'<div style="font-size:8px;color:var(--muted);margin-top:2px;text-align:right">'+pct+'%</div></td>'
+      +'</tr>';
+  }).join('');
+  return '<div class="chart-section">'
+    +'<div class="chart-title">Projeção — Meses Seguintes</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
+      +'<thead><tr style="border-bottom:1px solid var(--border)">'
+        +'<th style="padding:5px 10px;text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Mês</th>'
+        +'<th style="padding:5px 10px;text-align:right;font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Carteira</th>'
+        +'<th style="padding:5px 10px;text-align:right;font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Venda Est.</th>'
+        +'<th style="padding:5px 10px;text-align:right;font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Cobertura</th>'
+      +'</tr></thead>'
+      +'<tbody>'+rows+'</tbody>'
+    +'</table>'
+  +'</div>';
+}
+function projCard(title,vest,cart,col){
+  var v=vest||0,pct=v>0?Math.min(100,Math.round(cart/v*100)):0;
+  return '<div class="proj-card"><div class="proj-month">'+title+'</div>'
+    +'<div class="proj-main"><div class="proj-val" style="color:'+col+'">'+v.toLocaleString('pt-BR')+'</div><div class="proj-unit">pcs estimados</div></div>'
+    +'<div class="proj-bar-track"><div class="proj-bar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'
+    +'<div class="proj-sub">Carteira: '+cart.toLocaleString('pt-BR')+' pcs ('+pct+'% coberto)</div>'
+  +'</div>';
+}
+function carteiraCard(f){
+  var tc=(f.cart_jul||0)+(f.cart_ago||0)+(f.cart_set||0)+(f.cart_out||0)+(f.cart_nov||0);
+  var tv=(f.vest_jul||0)+(f.vest_ago||0)+(f.vest_set||0)+(f.vest_out||0)+(f.vest_nov||0);
+  var pct=tv>0?Math.round(tc/tv*100):0;
+  return '<div class="chart-section"><div class="chart-title">Carteira Jul–Nov vs Venda Estimada</div>'
+    +'<div style="flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Carteira total (5 meses)</div>'
+    +'<div style="font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--blue)">'+tc.toLocaleString('pt-BR')+' <span style="font-size:12px;color:var(--muted)">pcs</span></div>'
+    +'<div style="font-size:9px;color:var(--muted);margin-top:3px">Venda estimada: '+tv.toLocaleString('pt-BR')+' pcs</div>'
+    +'<div style="height:8px;background:var(--border);border-radius:4px;margin-top:8px"><div style="height:100%;background:var(--blue);border-radius:4px;width:'+pct+'%"></div></div>'
+    +'<div style="font-size:9px;color:var(--dim);margin-top:4px">'+pct+'% da demanda coberta por pedidos</div>'
+  +'</div></div>';
+}
+function wohInterpret(w){
+  if(w===0) return 'Sem giro registrado';
+  if(w<9)  return '⚠ Ruptura iminente — reposição urgente';
+  if(w<=16) return '✓ Cobertura ideal (2–4 meses)';
+  if(w<=30) return 'Excesso leve — acionar sell-out';
+  if(w<=60) return 'Excesso crítico — promoção ou outlet';
+  return 'Excesso severo — ação imediata necessária';
+}
+function scaleSegs(woh){
+  var zones=[{f:0,t:8,c:'#ef4444'},{f:8,t:16,c:'#10b981'},{f:16,t:30,c:'#f59e0b'},{f:30,t:60,c:'#f97316'},{f:60,t:999,c:'#7c2d12'}];
+  var m=Math.min(woh,999);
+  return zones.map(function(z){var a=m>=z.f&&m<z.t;return '<div class="woh-seg" style="background:'+z.c+(a?'':'44')+'"></div>'}).join('');
+}
+
+function drawWOHGauge(canvas,woh,color){
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,r=W/2-6;
+  ctx.clearRect(0,0,W,H);
+  var start=Math.PI*0.75,end=Math.PI*2.25,pct=Math.min(woh/80,1);
+  ctx.beginPath();ctx.arc(cx,cy,r,start,end);ctx.strokeStyle='#1e3354';ctx.lineWidth=8;ctx.lineCap='round';ctx.stroke();
+  if(pct>0){ctx.beginPath();ctx.arc(cx,cy,r,start,start+pct*(end-start));ctx.strokeStyle=color;ctx.lineWidth=8;ctx.lineCap='round';ctx.stroke()}
+  ctx.fillStyle=color;ctx.font='bold 16px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(woh,cx,cy-3);
+  ctx.fillStyle='#64748b';ctx.font='8px system-ui';ctx.fillText('sem',cx,cy+10);
+}
+
+function drawSalesChart(canvas,f){
+  if(!canvas) return;
+  var DPR=window.devicePixelRatio||1,W0=canvas.offsetWidth||canvas.width,H0=canvas.height;
+  canvas.width=W0*DPR;canvas.height=H0*DPR;
+  var ctx=canvas.getContext('2d');ctx.scale(DPR,DPR);
+  var W=W0,H=H0,pad={l:36,r:12,t:10,b:24};
+  var labels=['Jan','Fev','Mar','Abr','Mai','Jun',DATA.mes_nome.substring(0,3)+'*','Ago*'];
+  var hist=f.vendas.slice();
+  var estJul=f.vest_jul||f.ritmo_jul;
+  var all=hist.concat([estJul,f.vest_ago]);
+  var maxV=Math.max.apply(null,all.filter(function(v){return v>0}).concat([1]));
+  var n=labels.length,bW=(W-pad.l-pad.r)/n,gap=bW*0.25;
+  ctx.clearRect(0,0,W,H);
+  [0.25,0.5,0.75,1].forEach(function(p){
+    var y=pad.t+(1-p)*(H-pad.t-pad.b);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.strokeStyle='#1e335430';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#64748b';ctx.font='8px system-ui';ctx.textAlign='right';ctx.fillText(fmt(Math.round(p*maxV)),pad.l-3,y+3);
+  });
+  all.forEach(function(v,i){
+    if(!v) return;
+    var isP=i>=6,x=pad.l+i*bW+gap/2,bh=(v/maxV)*(H-pad.t-pad.b),y=H-pad.b-bh;
+    var barCol=isP?(i===6?statusColor(f.status):'#3b82f6'):'#3b82f6';
+    if(isP){ctx.setLineDash([3,2]);ctx.strokeStyle=barCol;ctx.lineWidth=1;ctx.strokeRect(x,y,bW-gap,bh);ctx.setLineDash([]);ctx.fillStyle=barCol+'30'}
+    else{ctx.fillStyle='#3b82f6'+(i===5?'aa':'77')}
+    ctx.fillRect(x,y,bW-gap,bh);
+    ctx.fillStyle='#64748b';ctx.font='8px system-ui';ctx.textAlign='center';ctx.fillText(labels[i],x+(bW-gap)/2,H-pad.b+12);
+    if(v>maxV*0.05){ctx.fillStyle='#94a3b8';ctx.font='7px system-ui';ctx.fillText(fmt(v),x+(bW-gap)/2,y-3)}
+  });
+}
+
+function drawWeekChart(canvas,f){
+  if(!canvas) return;
+  var DPR=window.devicePixelRatio||1,W0=canvas.offsetWidth||canvas.width,H0=canvas.height;
+  canvas.width=W0*DPR;canvas.height=H0*DPR;
+  var ctx=canvas.getContext('2d');ctx.scale(DPR,DPR);
+  var W=W0,H=H0,pad={l:36,r:12,t:16,b:22};
+  var mai=f.vendas[4]||f.venda_media;
+  var jun=f.vest_jul||f.ritmo_jul;
+  var julP=f.ritmo_jul;
+  function wk(m,ws){return[Math.round(m*ws[0]),Math.round(m*ws[1]),Math.round(m*ws[2]),Math.round(m*ws[3])]}
+  var w=[0.22,0.26,0.25,0.27];
+  var data=wk(mai,w).concat(wk(jun,w)).concat([Math.round(f.est_prop),Math.round(julP/4.33),Math.round(julP/4.33),Math.round(julP/4.33)]);
+  var maxV=Math.max.apply(null,data.concat([1]));
+  var n=data.length,bW=(W-pad.l-pad.r)/n,gap=bW*0.3;
+  ctx.clearRect(0,0,W,H);
+  [[0,'#3b82f615'],[4,'#10b98110'],[8,'#f9731610']].forEach(function(gi){
+    ctx.fillStyle=gi[1];ctx.fillRect(pad.l+gi[0]*bW,pad.t,4*bW,H-pad.t-pad.b);
+  });
+  data.forEach(function(v,i){
+    var isJ=i>=8,x=pad.l+i*bW+gap/2,bh=(v/maxV)*(H-pad.t-pad.b),y=H-pad.b-bh;
+    var col=isJ?statusColor(f.status):(i<4?'#64748b':'#3b82f6');
+    if(isJ&&i>8){ctx.setLineDash([3,2]);ctx.strokeStyle=col;ctx.lineWidth=1;ctx.strokeRect(x,y,bW-gap,bh);ctx.setLineDash([]);ctx.fillStyle=col+'22'}
+    else{ctx.fillStyle=col+(isJ&&i===8?'cc':'66')}
+    ctx.fillRect(x,y,bW-gap,bh);
+  });
+  [['Maio',2,'#3b82f6'],['Junho',6,'#10b981'],[DATA.mes_nome.substring(0,3),10,statusColor(f.status)]].forEach(function(gl){
+    ctx.font='bold 7.5px system-ui';ctx.textAlign='center';ctx.fillStyle=gl[2];
+    ctx.fillText(gl[0],pad.l+gl[1]*bW,pad.t-3);
+  });
+}
+
+function renderAlerts(){
+  var nonFeds=families.filter(function(f){return !isFeds(f)});
+  var fedsAll =families.filter(isFeds);
+  var ruptura=nonFeds.filter(function(f){return f.status==='ruptura'}).sort(function(a,b){return a.woh-b.woh});
+  var estrela=nonFeds.filter(function(f){return f.status==='estrela'}).sort(function(a,b){return b.ritmo_jul-a.ritmo_jul});
+  var excesso=nonFeds.filter(function(f){return f.status==='excesso'}).sort(function(a,b){return b.woh-a.woh}).slice(0,6);
+  function alertItem(f,cls){
+    return '<div class="alert-item '+cls+'" onclick="selectByName(\''+f.name.replace(/'/g,"\\'")+'\')">'
+      +'<div class="alert-fam">'+f.name+'</div>'
+      +'<div class="alert-detail">WOH '+f.woh+'s · '+f.estoque.toLocaleString('pt-BR')+' pcs</div></div>';
+  }
+  function fedsItem(f){
+    var col=statusColor(f.status);
+    return '<div class="alert-item" style="border-left:2px solid '+col+';background:'+col+'0d" onclick="selectByName(\''+f.name.replace(/'/g,"\\'")+'\')">'
+      +'<div class="alert-fam" style="font-size:9.5px">'+f.name+'</div>'
+      +'<div class="alert-detail">WOH '+f.woh+'s · '+f.estoque.toLocaleString('pt-BR')+' pcs · <span style="color:'+col+'">'+statusLabel(f.status)+'</span></div></div>';
+  }
+  document.getElementById('alertsPanel').innerHTML=
+    '<div class="alert-section"><div class="alert-title" style="color:var(--red)">⚠ RUPTURA ('+ruptura.length+')</div>'
+      +ruptura.map(function(f){return alertItem(f,'alert-r')}).join('')+'</div>'
+    +'<div class="alert-section"><div class="alert-title" style="color:var(--purple)">★ ESTRELA ('+estrela.length+')</div>'
+      +estrela.map(function(f){return alertItem(f,'alert-g')}).join('')+'</div>'
+    +'<div class="alert-section"><div class="alert-title" style="color:var(--orange)">▲ EXCESSO TOP 6</div>'
+      +excesso.map(function(f){return alertItem(f,'alert-o')}).join('')+'</div>'
+    +'<div class="feds-section"><div class="feds-title">🌍 FEDS ('+fedsAll.length+' famílias)</div>'
+      +fedsAll.sort(function(a,b){return a.woh-b.woh}).map(fedsItem).join('')+'</div>';
+}
+
+/* ─── AGENDAMENTOS ─────────────────────────────────────────────────────────── */
+var STATUS_COLORS={'AGUARDANDO FATURAMENTO':'#f59e0b','AGUARDANDO EXPEDIÇÃO':'#3b82f6','EM TRÂNSITO - NO PRAZO':'#10b981','EM TRÂNSITO - FORA DO PRAZO':'#ef4444','EXPEDIDO':'#10b981','EXTRAVIO':'#ef4444'};
+function statusChipColor(st){return STATUS_COLORS[st]||'#64748b'}
+
+function openAgend(){
+  var agends=DATA.agendamentos||[];
+  var totalPcs=agends.reduce(function(a,x){return a+x.total},0);
+  var fedsAgends=agends.filter(function(x){return x.name.toUpperCase().indexOf('FEDS')>=0});
+  var otherAgends=agends.filter(function(x){return x.name.toUpperCase().indexOf('FEDS')<0});
+  var totalFeds=fedsAgends.reduce(function(a,x){return a+x.total},0);
+
+  function weekChips(by_week){
+    return Object.keys(by_week).sort().map(function(k){
+      var wnum=k.replace(/\d{4}-W/,'Sem ');
+      return '<span class="week-chip">'+wnum+': '+by_week[k].toLocaleString('pt-BR')+'</span>';
+    }).join('');
+  }
+  function statusChips(by_st){
+    return Object.keys(by_st).map(function(st){
+      var col=statusChipColor(st);
+      var short=st.replace('AGUARDANDO ','AGD. ').replace('EM TRÂNSITO - ','EM TR. ');
+      return '<span class="st-chip" style="background:'+col+'22;color:'+col+'">'+short+': '+by_st[st].toLocaleString('pt-BR')+'</span>';
+    }).join(' ');
+  }
+  function table(rows){
+    if(!rows.length) return '<p style="color:var(--muted);font-size:11px;padding:8px 0">Nenhum agendamento pendente.</p>';
+    return '<table class="agend-table"><thead><tr><th>Família</th><th>Total pcs</th><th>Programação por semana</th><th>Status</th></tr></thead><tbody>'
+      +rows.map(function(x){
+        return '<tr>'
+          +'<td style="font-weight:600">'+x.name+'</td>'
+          +'<td style="color:var(--blue);font-weight:700">'+x.total.toLocaleString('pt-BR')+'</td>'
+          +'<td>'+weekChips(x.by_week||{})+'</td>'
+          +'<td>'+statusChips(x.by_status||{})+'</td>'
+        +'</tr>';
+      }).join('')+'</tbody></table>';
+  }
+
+  document.getElementById('agendBody').innerHTML=
+    '<div class="agend-summary">'
+      +'<div class="agend-kpi"><div class="kpi-label">Total pendente</div><div class="kpi-val kpi-b">'+totalPcs.toLocaleString('pt-BR')+' pcs</div><div class="kpi-sub">'+agends.length+' famílias com agendamento</div></div>'
+      +'<div class="agend-kpi"><div class="kpi-label">Famílias (exceto FEDS)</div><div class="kpi-val kpi-g">'+((totalPcs-totalFeds)||0).toLocaleString('pt-BR')+' pcs</div><div class="kpi-sub">'+otherAgends.length+' famílias</div></div>'
+      +'<div class="agend-kpi"><div class="kpi-label">FEDS pendente</div><div class="kpi-val" style="color:var(--purple)">'+totalFeds.toLocaleString('pt-BR')+' pcs</div><div class="kpi-sub">'+fedsAgends.length+' famílias FEDS</div></div>'
+    +'</div>'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);margin-bottom:8px">Famílias Principais</div>'
+    +table(otherAgends.sort(function(a,b){return b.total-a.total}))
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#a855f7;margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--border)">🌍 FEDS</div>'
+    +table(fedsAgends.sort(function(a,b){return b.total-a.total}));
+
+  document.getElementById('agendOverlay').classList.add('open');
+}
+function closeAgend(){document.getElementById('agendOverlay').classList.remove('open')}
+function closeAgendIfBg(e){if(e.target===document.getElementById('agendOverlay'))closeAgend()}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAgend();closeResumo()}});
+
+/* ─── CARDS VIEW ───────────────────────────────────────────────────────────── */
+var viewMode='dash';
+function setView(mode, btn){
+  viewMode=mode;
+  document.querySelectorAll('.view-tab').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  var mainEl=document.querySelector('.main');
+  var cardsEl=document.getElementById('cardsView');
+  var exportBar=document.getElementById('cardsExportBar');
+  if(mode==='cards'){
+    mainEl.style.display='none'; cardsEl.classList.add('active');
+    if(exportBar) exportBar.classList.add('visible');
+    renderCards();
+  } else {
+    mainEl.style.display=''; cardsEl.classList.remove('active');
+    if(exportBar) exportBar.classList.remove('visible');
+  }
+}
+function renderCards(){
+  var arr=getSorted();
+  var dia=DATA.dia_corte;
+  var ftw=arr.filter(function(f){return !isFeds(f)});
+  var feds=arr.filter(isFeds);
+  function cardHTML(f){
+    var col=statusColor(f.status);
+    var ritmoReal=f.ritmo_jul_real;
+    var vest=f.vest_jul||f.ritmo_jul;
+    var saldoEst=f.saldo_est;
+    var saldoRitmo=f.saldo_ritmo;
+    function row(lbl,val,vc){
+      return '<div class="fam-row">'
+        +'<span class="fam-row-lbl">'+lbl+'</span>'
+        +'<span class="fam-row-val"'+(vc?' style="color:'+vc+'"':'')+'>'+val.toLocaleString('pt-BR')+'</span>'
+      +'</div>';
+    }
+    var wohAlta = f.woh >= 16;
+    var propEsp = DATA.dias_no_mes > 0 ? Math.round(vest * DATA.dia_corte / DATA.dias_no_mes) : 0;
+    var vendaOk = propEsp > 0 && (f.real_jul || 0) >= propEsp;
+    var wohBadge  = wohAlta
+      ? '<span class="card-badge-x"  title="WOH muito alta ('+f.woh+' sem)">✕</span>'
+      : '<span class="card-badge-ok" title="WOH dentro do normal ('+f.woh+' sem)">✓</span>';
+    var vendaBadge = vendaOk
+      ? '<span class="card-badge-ok" title="Venda dentro do esperado">✓</span>'
+      : '<span class="card-badge-x"  title="Venda abaixo do esperado">✕</span>';
+    var badges = wohBadge + vendaBadge;
+    var ritmoColor = ritmoReal > vest ? 'var(--red)' : null;
+    var saldoEstColor = saldoEst < 0 ? 'var(--red)' : null;
+    var saldoRitmoColor = saldoRitmo < 0 ? 'var(--red)' : null;
+    return '<div class="fam-card" onclick="setView(\'dash\',document.getElementById(\'tabDash\'));selectByName(\''+f.name.replace(/'/g,"\\'")+'\')">'
+      +'<div class="fam-card-hdr">'
+        +'<span style="display:flex;align-items:center;gap:4px">'
+          +'<span class="fam-card-name" style="color:var(--text)">'+f.name+'</span>'
+          +badges
+        +'</span>'
+        +'<span class="fam-card-woh" style="color:'+col+'">'+f.woh+' sem</span>'
+      +'</div>'
+      +'<div class="fam-card-body">'
+        +row('Estoque do dia', f.estoque)
+        +row('Agendamento',    f.agend)
+        +row(DATA.mes_nome.substring(0,3)+' realizado até '+dia, f.real_jul||0)
+        +row('Ritmo '+DATA.mes_nome.substring(0,3), ritmoReal, ritmoColor)
+        +row('Venda est. '+DATA.mes_nome.substring(0,3), vest)
+        +'<div class="fam-row-sep"></div>'
+        +'<div class="fam-row fam-row-saldo">'
+          +'<span class="fam-row-lbl">Saldo c/ est.</span>'
+          +'<span class="fam-row-val"'+(saldoEstColor?' style="color:'+saldoEstColor+'"':'')+'>'+saldoEst.toLocaleString('pt-BR')+'</span>'
+        +'</div>'
+        +'<div class="fam-row fam-row-saldo">'
+          +'<span class="fam-row-lbl">Saldo c/ ritmo</span>'
+          +'<span class="fam-row-val"'+(saldoRitmoColor?' style="color:'+saldoRitmoColor+'"':'')+'>'+saldoRitmo.toLocaleString('pt-BR')+'</span>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }
+  var PG = 15; // 5 colunas × 3 linhas
+  var parts = [];
+  var count = 0;
+  ftw.forEach(function(f){
+    if(count > 0 && count % PG === 0) parts.push('<div class="page-break"></div>');
+    parts.push(cardHTML(f));
+    count++;
+  });
+  if(feds.length){
+    parts.push('<div class="cards-section-hdr" style="color:#a855f7">🌍 FEDS — '+feds.length+' famílias</div>');
+    feds.forEach(function(f, i){
+      if(count > 0 && count % PG === 0) parts.push('<div class="page-break"></div>');
+      parts.push(cardHTML(f));
+      count++;
+    });
+  }
+  document.getElementById('cardsGrid').innerHTML = parts.join('');
+}
+
+/* ─── EXPORTAR CARDS ─────────────────────────────────────────────────────── */
+function printCards(){
+  var gridEl = document.getElementById('cardsGrid');
+  var cloned = gridEl.cloneNode(true);
+  cloned.querySelectorAll('[onclick]').forEach(function(el){el.removeAttribute('onclick');el.style.cursor='default';});
+  var gridHtml = cloned.innerHTML;
+  var title = 'Cards · Adidas Nomura · ' + DATA.mes_nome + ' ' + DATA.ano;
+  var pw = window.open('', '_blank', 'width=1200,height=800');
+  if(!pw){ alert('Permita popups para exportar.'); return; }
+  pw.document.write('<!DOCTYPE html><html><head>'
+    +'<meta charset="UTF-8"><title>'+title+'</title>'
+    +'<style>'
+    +'@page{size:A4 landscape;margin:1cm}'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +':root{--green:#1a7a3a;--red:#c0392b;--text:#111;--muted:#888;--border:#ccc;--surface:#fff;--surface2:#f5f5f5}'
+    +'body{background:#fff;font-family:-apple-system,"Helvetica Neue",system-ui,sans-serif;font-size:12px;padding:0}'
+    +'h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#444;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #ccc}'
+    +'.cards-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}'
+    +'.fam-card{border:1px solid #ccc;border-radius:5px;overflow:hidden;break-inside:avoid;background:#fff}'
+    +'.fam-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;border-bottom:1px solid #ddd;background:#f8f8f8}'
+    +'.fam-card-name{font-size:9px;font-weight:800;letter-spacing:.2px;text-transform:uppercase;color:#111}'
+    +'.fam-card-woh{font-size:10px;font-weight:700}'
+    +'.card-badge-x{color:#ef4444;font-size:14px;font-weight:900;line-height:1;flex-shrink:0}'
+    +'.card-badge-ok{color:#22c55e;font-size:14px;font-weight:900;line-height:1;flex-shrink:0}'
+    +'.fam-card-body{padding:0}'
+    +'.fam-row{display:flex;justify-content:space-between;align-items:center;padding:3px 9px;border-bottom:1px solid #f0f0f0}'
+    +'.fam-row-lbl{font-size:8.5px;color:#888}'
+    +'.fam-row-val{font-size:9px;font-weight:600;font-variant-numeric:tabular-nums}'
+    +'.fam-row-sep{display:none}'
+    +'.fam-row-saldo{background:#f5f5f5}'
+    +'.cards-section-hdr{grid-column:1/-1;padding:5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border:1px solid #d8b4fe;background:#f3e8ff;color:#7e22ce;margin:6px 0 3px;border-radius:3px;break-inside:avoid}'
+    +'.page-break{break-after:page;display:block;grid-column:1/-1;height:0;visibility:hidden}'
+    +'</style></head><body>'
+    +'<h2>'+title+'</h2>'
+    +'<div class="cards-grid">'+gridHtml+'</div>'
+    +'<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>'
+    +'</body></html>');
+  pw.document.close();
+}
+/* ─── RESUMO FAMÍLIA ───────────────────────────────────────────────────────── */
+function openResumo(){
+  var f=families[selIdx]; if(!f) return;
+  document.getElementById('resumoTitle').textContent=f.name;
+  document.getElementById('resumoSub').textContent='Resumo completo · '+DATA.mes_nome+' '+DATA.ano;
+  var badge=document.getElementById('resumoBadge');
+  badge.className='status-badge '+badgeClass(f.status);
+  badge.textContent=statusLabel(f.status);
+  renderResumoBody(f);
+  document.getElementById('resumoOverlay').classList.add('open');
+}
+function closeResumo(){document.getElementById('resumoOverlay').classList.remove('open')}
+function closeResumoIfBg(e){if(e.target===document.getElementById('resumoOverlay'))closeResumo()}
+
+function renderResumoBody(f){
+  var col=statusColor(f.status);
+  var ritmo=f.ritmo_jul, ritmoSem=Math.round(ritmo/4.33);
+  function kpi(lbl,val,sub,vc){
+    return '<div class="resumo-kpi"><div class="resumo-kpi-label">'+lbl+'</div>'
+      +'<div class="resumo-kpi-val"'+(vc?' style="color:'+vc+'"':'')+'>'+val+'</div>'
+      +'<div class="resumo-kpi-sub">'+sub+'</div></div>';
+  }
+  function projRow(lbl,vest,cart,c){
+    var diff=cart-vest, sign=diff>=0?'+':'';
+    var pct=vest>0?Math.round(diff/vest*100):0;
+    var dc=diff>=0?'var(--green)':'var(--red)';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:9px 14px;font-weight:600">'+lbl+'</td>'
+      +'<td style="padding:9px 14px;text-align:right;color:'+c+';font-weight:700;font-variant-numeric:tabular-nums">'+vest.toLocaleString("pt-BR")+' pcs</td>'
+      +'<td style="padding:9px 14px;text-align:right;color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums">'+cart.toLocaleString("pt-BR")+' pcs</td>'
+      +'<td style="padding:9px 14px;text-align:right;color:'+dc+';font-size:11px">'+sign+diff.toLocaleString("pt-BR")+' ('+sign+pct+'%)</td>'
+    +'</tr>';
+  }
+  document.getElementById('resumoBody').innerHTML=
+    '<div class="resumo-kpis">'
+      +kpi('Estoque Atual',f.estoque.toLocaleString('pt-BR')+' pcs','em loja agora',col)
+      +kpi('WOH',f.woh+' semanas',wohInterpret(f.woh),col)
+      +kpi('Agendamento',f.agend.toLocaleString('pt-BR')+' pcs','a caminho')
+      +kpi('Ritmo '+DATA.mes_nome,ritmo.toLocaleString('pt-BR')+' pcs/mês','≈ '+ritmoSem+' pcs/sem',col)
+    +'</div>'
+    +'<div class="resumo-sec-title">Vendas Mensais — Jan a '+DATA.mes_nome+'</div>'
+    +'<canvas id="resumoChart" height="190" style="display:block;width:100%;max-width:100%;margin-bottom:22px"></canvas>'
+    +'<div class="resumo-sec-title">Projeção de Chegadas vs Venda Estimada</div>'
+    +'<table style="width:100%;border-collapse:collapse;background:var(--surface2);border-radius:6px;overflow:hidden">'
+      +'<thead><tr style="border-bottom:1px solid var(--border)">'
+        +'<th style="padding:8px 14px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Mês</th>'
+        +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Venda Estimada</th>'
+        +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Carteira</th>'
+        +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Diferença</th>'
+      +'</tr></thead><tbody>'
+        +projRow(DATA.mes_nome+' '+DATA.ano, f.vest_jul||ritmo, f.cart_jul||0, col)
+        +projRow('Agosto '+DATA.ano, f.vest_ago||0, f.cart_ago||0, '#5b9cf6')
+        +projRow('Setembro '+DATA.ano, f.vest_set||0, f.cart_set||0, '#5b9cf6')
+        +projRow('Outubro '+DATA.ano, f.vest_out||0, f.cart_out||0, '#5b9cf6')
+        +projRow('Novembro '+DATA.ano, f.vest_nov||0, f.cart_nov||0, '#5b9cf6')
+      +'</tbody>'
+    +'</table>';
+  requestAnimationFrame(function(){
+    var c=document.getElementById('resumoChart');
+    if(c) drawSalesChart(c,f);
+  });
+}
+
+renderKPIs();
+renderKPIsRS();
+renderRanking();
+renderAlerts();
+selectFamily(getSorted()[0].origIdx);
+</script>
+</body>
+</html>
