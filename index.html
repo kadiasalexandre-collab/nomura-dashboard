@@ -164,6 +164,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .proj-badge-rupt{background:#c0000035;color:#f87171}
 .proj-legend{display:flex;gap:12px;align-items:center;margin-bottom:12px;font-size:9px;color:var(--muted)}
 .proj-legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px}
+.proj-export-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.proj-export-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 /* cards view */
 .cards-view{display:none;overflow-y:auto;padding:16px 20px;flex:1}
 .cards-view.active{display:block}
@@ -865,81 +867,172 @@ function setView(mode, btn){
     mainEl.style.display='';
   }
 }
-function renderProjecao(){
-  var MESES=[
-    {key:'jul',nome:'Julho',cart:'cart_jul',vest:'vest_jul'},
-    {key:'ago',nome:'Agosto',cart:'cart_ago',vest:'vest_ago'},
-    {key:'set',nome:'Setembro',cart:'cart_set',vest:'vest_set'},
-    {key:'out',nome:'Outubro',cart:'cart_out',vest:'vest_out'},
-    {key:'nov',nome:'Novembro',cart:'cart_nov',vest:'vest_nov'},
-  ];
-  var rows = _familiesOrig.map(function(f){
-    var base = (f.estoque||0)+(f.agend||0);
-    var saldos = [], saldo = base;
-    MESES.forEach(function(m){
-      saldo += (f[m.cart]||0) - (f[m.vest]||0);
-      saldos.push(saldo);
-    });
-    // primeiro mês com saldo ≤ 0
-    var ruptIdx = -1;
-    for(var i=0;i<saldos.length;i++){ if(saldos[i]<=0){ruptIdx=i;break;} }
-    return {f:f, saldos:saldos, ruptIdx:ruptIdx};
+var PROJ_MESES=[
+  {key:'jul',nome:'Julho',   cart:'cart_jul',vest:'vest_jul'},
+  {key:'ago',nome:'Agosto',  cart:'cart_ago',vest:'vest_ago'},
+  {key:'set',nome:'Setembro',cart:'cart_set',vest:'vest_set'},
+  {key:'out',nome:'Outubro', cart:'cart_out',vest:'vest_out'},
+  {key:'nov',nome:'Novembro',cart:'cart_nov',vest:'vest_nov'},
+];
+function calcProjRows(){
+  var rows=_familiesOrig.map(function(f){
+    var base=(f.estoque||0)+(f.agend||0);
+    var saldos=[],saldo=base;
+    PROJ_MESES.forEach(function(m){saldo+=(f[m.cart]||0)-(f[m.vest]||0);saldos.push(saldo);});
+    var ruptIdx=-1;
+    for(var i=0;i<saldos.length;i++){if(saldos[i]<=0){ruptIdx=i;break;}}
+    return {f:f,saldos:saldos,ruptIdx:ruptIdx};
   });
-  // ordena: ruptura mais cedo primeiro, depois risco, depois OK por saldo final
   rows.sort(function(a,b){
-    if(a.ruptIdx>=0 && b.ruptIdx>=0) return a.ruptIdx-b.ruptIdx;
+    if(a.ruptIdx>=0&&b.ruptIdx>=0) return a.ruptIdx-b.ruptIdx;
     if(a.ruptIdx>=0) return -1;
     if(b.ruptIdx>=0) return 1;
     return a.saldos[4]-b.saldos[4];
   });
-  function cellHtml(saldo, vestMes){
-    var cls, lbl;
+  return rows;
+}
+function renderProjecao(){
+  var rows=calcProjRows();
+  function cellHtml(saldo,vestMes){
+    var cls,lbl;
     if(saldo<=0){cls='proj-rupt';lbl='RUPTURA';}
     else if(saldo<vestMes){cls='proj-risco';lbl='RISCO';}
     else{cls='proj-ok';lbl='OK';}
     var sign=saldo>=0?'+':'';
-    return '<td class="'+cls+'" style="text-align:center">'
-      +'<div class="proj-cell">'
-        +'<span class="proj-cell-val">'+sign+saldo.toLocaleString('pt-BR')+'</span>'
-        +'<span class="proj-cell-lbl">'+lbl+'</span>'
-      +'</div></td>';
+    return '<td class="'+cls+'" style="text-align:center"><div class="proj-cell">'
+      +'<span class="proj-cell-val">'+sign+saldo.toLocaleString('pt-BR')+'</span>'
+      +'<span class="proj-cell-lbl">'+lbl+'</span></div></td>';
   }
-  function badgeHtml(ruptIdx){
-    if(ruptIdx<0) return '<span class="proj-badge proj-badge-ok">✓ OK</span>';
-    var m=MESES[ruptIdx];
-    return '<span class="proj-badge proj-badge-rupt">⚠ '+m.nome+'</span>';
+  function badgeHtml(ri){
+    if(ri<0) return '<span class="proj-badge proj-badge-ok">✓ OK</span>';
+    return '<span class="proj-badge proj-badge-rupt">⚠ '+PROJ_MESES[ri].nome+'</span>';
   }
   var nRupt=rows.filter(function(r){return r.ruptIdx>=0;}).length;
-  var nRisco=rows.filter(function(r){return r.ruptIdx<0&&r.saldos[4]<(r.f[MESES[4].vest]||0);}).length;
+  var nRisco=rows.filter(function(r){return r.ruptIdx<0&&r.saldos[4]<(r.f[PROJ_MESES[4].vest]||0);}).length;
   var tableRows=rows.map(function(r){
-    var f=r.f;
     return '<tr>'
-      +'<td style="font-size:10px;font-weight:700;color:var(--text);white-space:nowrap">'+f.name+'</td>'
-      +'<td style="text-align:center;font-size:10px;color:var(--muted)">'+f.woh+' sem</td>'
-      +r.saldos.map(function(s,i){return cellHtml(s,f[MESES[i].vest]||0);}).join('')
+      +'<td style="font-size:10px;font-weight:700;color:var(--text);white-space:nowrap">'+r.f.name+'</td>'
+      +'<td style="text-align:center;font-size:10px;color:var(--muted)">'+r.f.woh+' sem</td>'
+      +r.saldos.map(function(s,i){return cellHtml(s,r.f[PROJ_MESES[i].vest]||0);}).join('')
       +'<td style="text-align:center">'+badgeHtml(r.ruptIdx)+'</td>'
     +'</tr>';
   }).join('');
   document.getElementById('projView').innerHTML=
-    '<div style="margin-bottom:14px">'
-      +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Projeção de Ruptura — '+DATA.mes_nome+' a Novembro '+DATA.ano+'</div>'
-      +'<div style="font-size:10px;color:var(--muted);margin-bottom:10px">Saldo acumulado = estoque + agend + carteira acumulada − venda estimada acumulada</div>'
-      +'<div class="proj-legend">'
-        +'<span><span class="proj-legend-dot" style="background:#f8717150"></span>Ruptura — '+nRupt+' famílias</span>'
-        +'<span><span class="proj-legend-dot" style="background:#fb923c50"></span>Risco (&lt; 1 mês cobertura) — '+nRisco+' famílias</span>'
-        +'<span><span class="proj-legend-dot" style="background:#22d3a030"></span>OK</span>'
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">'
+      +'<div>'
+        +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Projeção de Ruptura — '+DATA.mes_nome+' a Novembro '+DATA.ano+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:10px">Saldo acumulado = estoque + agend + carteira acumulada − venda estimada acumulada</div>'
+        +'<div class="proj-legend">'
+          +'<span><span class="proj-legend-dot" style="background:#f8717150"></span>Ruptura — '+nRupt+' famílias</span>'
+          +'<span><span class="proj-legend-dot" style="background:#fb923c50"></span>Risco (&lt; 1 mês cobertura) — '+nRisco+' famílias</span>'
+          +'<span><span class="proj-legend-dot" style="background:#22d3a030"></span>OK</span>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'
+        +'<button class="proj-export-btn" onclick="downloadProjExcel()">⬇ Excel</button>'
+        +'<button class="proj-export-btn" onclick="printProj()">🖨 PDF</button>'
       +'</div>'
     +'</div>'
     +'<div style="overflow-x:auto">'
-    +'<table class="proj-table">'
-      +'<thead><tr>'
-        +'<th class="th-fam">Família</th>'
-        +'<th class="th-mes">WOH Atual</th>'
-        +MESES.map(function(m){return '<th class="th-mes">'+m.nome+'</th>';}).join('')
-        +'<th class="th-mes">Ruptura em</th>'
-      +'</tr></thead>'
-      +'<tbody>'+tableRows+'</tbody>'
-    +'</table></div>';
+    +'<table class="proj-table"><thead><tr>'
+      +'<th class="th-fam">Família</th>'
+      +'<th class="th-mes">WOH Atual</th>'
+      +PROJ_MESES.map(function(m){return '<th class="th-mes">'+m.nome+'</th>';}).join('')
+      +'<th class="th-mes">Ruptura em</th>'
+    +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+}
+function downloadProjExcel(){
+  var rows=calcProjRows();
+  function cellBg(saldo,vest){
+    if(saldo<=0) return 'background:#fde8e8;color:#c0392b';
+    if(saldo<vest) return 'background:#fff3e0;color:#b45309';
+    return 'background:#d4f5e9;color:#0a5c36';
+  }
+  function cellLbl(saldo,vest){
+    if(saldo<=0) return 'RUPTURA';
+    if(saldo<vest) return 'RISCO';
+    return 'OK';
+  }
+  var hdStyle='background:#1e3a5f;color:#fff;font-weight:bold;padding:6px 10px;text-align:center;border:1px solid #ccc';
+  var hdFamStyle='background:#1e3a5f;color:#fff;font-weight:bold;padding:6px 10px;text-align:left;border:1px solid #ccc';
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
+    +'<head><meta charset="UTF-8">'
+    +'<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'
+    +'<x:Name>Projeção Ruptura</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'
+    +'</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'
+    +'<table border="1" style="border-collapse:collapse;font-family:Arial;font-size:10pt">'
+    +'<tr>'
+      +'<th style="'+hdFamStyle+'">Família</th>'
+      +'<th style="'+hdStyle+'">WOH Atual</th>'
+      +PROJ_MESES.map(function(m){return '<th style="'+hdStyle+'">'+m.nome+'</th>';}).join('')
+      +'<th style="'+hdStyle+'">Ruptura em</th>'
+    +'</tr>';
+  rows.forEach(function(r){
+    html+='<tr>'
+      +'<td style="font-weight:bold;padding:5px 10px;border:1px solid #ddd">'+r.f.name+'</td>'
+      +'<td style="text-align:center;padding:5px 10px;border:1px solid #ddd">'+r.f.woh+' sem</td>';
+    r.saldos.forEach(function(s,i){
+      var vest=r.f[PROJ_MESES[i].vest]||0;
+      var sign=s>=0?'+':'';
+      html+='<td style="text-align:center;padding:5px 10px;border:1px solid #ddd;'+cellBg(s,vest)+'">'
+        +sign+s.toLocaleString('pt-BR')+'\n'+cellLbl(s,vest)+'</td>';
+    });
+    var ruptLabel=r.ruptIdx<0?'✓ OK':'⚠ '+PROJ_MESES[r.ruptIdx].nome;
+    var ruptStyle=r.ruptIdx<0?'background:#d4f5e9;color:#0a5c36':'background:#fde8e8;color:#c0392b';
+    html+='<td style="text-align:center;padding:5px 10px;border:1px solid #ddd;font-weight:bold;'+ruptStyle+'">'+ruptLabel+'</td>';
+    html+='</tr>';
+  });
+  html+='</table></body></html>';
+  var blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='projecao_ruptura_'+DATA.ano+'.xls'; a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+function printProj(){
+  var rows=calcProjRows();
+  function cellStyle(saldo,vest){
+    if(saldo<=0) return 'background:#fde8e8;color:#c0392b';
+    if(saldo<vest) return 'background:#fff3e0;color:#b45309';
+    return 'background:#d4f5e9;color:#0a5c36';
+  }
+  function cellLbl(saldo,vest){return saldo<=0?'RUPTURA':saldo<vest?'RISCO':'OK';}
+  var title='Projeção de Ruptura — '+DATA.mes_nome+' a Novembro '+DATA.ano;
+  var tableHtml='<table style="width:100%;border-collapse:collapse;font-family:Arial;font-size:9pt">'
+    +'<thead><tr style="background:#1e3a5f;color:#fff">'
+      +'<th style="padding:7px 10px;text-align:left;border:1px solid #ccc">Família</th>'
+      +'<th style="padding:7px 10px;text-align:center;border:1px solid #ccc">WOH</th>'
+      +PROJ_MESES.map(function(m){return '<th style="padding:7px 10px;text-align:center;border:1px solid #ccc">'+m.nome+'</th>';}).join('')
+      +'<th style="padding:7px 10px;text-align:center;border:1px solid #ccc">Ruptura em</th>'
+    +'</tr></thead><tbody>';
+  rows.forEach(function(r,idx){
+    var bg=idx%2===0?'#fff':'#f8f8f8';
+    tableHtml+='<tr style="background:'+bg+'">'
+      +'<td style="padding:6px 10px;font-weight:700;border:1px solid #ddd">'+r.f.name+'</td>'
+      +'<td style="padding:6px 10px;text-align:center;border:1px solid #ddd">'+r.f.woh+' sem</td>';
+    r.saldos.forEach(function(s,i){
+      var vest=r.f[PROJ_MESES[i].vest]||0;
+      var sign=s>=0?'+':'';
+      tableHtml+='<td style="padding:6px 10px;text-align:center;border:1px solid #ddd;font-weight:600;'+cellStyle(s,vest)+'">'
+        +sign+s.toLocaleString('pt-BR')+'<br><span style="font-size:7pt">'+cellLbl(s,vest)+'</span></td>';
+    });
+    var rl=r.ruptIdx<0?'✓ OK':'⚠ '+PROJ_MESES[r.ruptIdx].nome;
+    var rs=r.ruptIdx<0?'background:#d4f5e9;color:#0a5c36':'background:#fde8e8;color:#c0392b';
+    tableHtml+='<td style="padding:6px 10px;text-align:center;border:1px solid #ddd;font-weight:700;'+rs+'">'+rl+'</td></tr>';
+  });
+  tableHtml+='</tbody></table>';
+  var pw=window.open('','_blank','width=1200,height=800');
+  if(!pw){alert('Permita popups para exportar.');return;}
+  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+title+'</title>'
+    +'<style>@page{size:A3 landscape;margin:1.2cm}body{font-family:Arial,sans-serif;font-size:10pt;padding:0;margin:0}'
+    +'h2{font-size:12pt;font-weight:700;margin:0 0 4px}p{font-size:8pt;color:#666;margin:0 0 12px}'
+    +'</style></head><body>'
+    +'<h2>'+title+'</h2>'
+    +'<p>Saldo acumulado = estoque + agendamento + carteira acumulada − venda estimada acumulada</p>'
+    +tableHtml
+    +'<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>'
+    +'</body></html>');
+  pw.document.close();
 }
 function renderCards(){
   var arr=getSorted();
