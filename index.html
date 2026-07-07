@@ -39,8 +39,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .kpi-g{color:var(--green)}.kpi-r{color:var(--red)}.kpi-a{color:var(--amber)}.kpi-b{color:var(--blue)}
 .main{display:grid;grid-template-columns:300px 1fr 220px;height:100%;overflow:hidden}
 .ranking-panel{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.panel-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:7px;flex-shrink:0}
+.panel-hdr-top{display:flex;align-items:center;justify-content:space-between}
 .panel-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+.fam-search{width:100%;padding:5px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:var(--font);outline:none;box-sizing:border-box}
+.fam-search:focus{border-color:var(--accent)}
 .sort-btns{display:flex;gap:4px}
 .sort-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:2px 6px;border-radius:2px;cursor:pointer;font-family:var(--font);letter-spacing:.3px}
 .sort-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
@@ -288,6 +291,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="ranking-panel">
       <div class="panel-hdr" style="flex-wrap:wrap;gap:6px">
         <span class="panel-title" id="rankTitle">Ranking</span>
+        <input id="famSearchInput" class="fam-search" type="text" placeholder="🔍 Buscar família…" oninput="_famSearch=this.value;renderRanking()">
         <div style="display:flex;gap:4px;align-items:center">
           <div class="sort-btns">
             <button class="sort-btn active" onclick="setSort('score',this)">Score</button>
@@ -476,7 +480,7 @@ function renderKPIsRS(){
   }).join('');
 }
 
-var sortKey='score', selIdx=-1, filtKey='all', divKey='all';
+var sortKey='score', selIdx=-1, filtKey='all', divKey='all', _famSearch='';
 function setSort(key,btn){
   sortKey=key;
   document.querySelectorAll('.sort-btn').forEach(function(b){b.classList.remove('active')});
@@ -514,6 +518,10 @@ function getSorted(){
 }
 function renderRanking(){
   var sorted=getSorted();
+  if(_famSearch){
+    var q=_famSearch.toLowerCase();
+    sorted=sorted.filter(function(f){return f.name.toLowerCase().indexOf(q)>=0;});
+  }
   var list=document.getElementById('rankingList');
   list.innerHTML=sorted.map(function(f,rank){
     var col=statusColor(f.status);
