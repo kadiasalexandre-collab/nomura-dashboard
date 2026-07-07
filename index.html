@@ -874,6 +874,12 @@ var PROJ_MESES=[
   {key:'out',nome:'Outubro', cart:'cart_out',vest:'vest_out'},
   {key:'nov',nome:'Novembro',cart:'cart_nov',vest:'vest_nov'},
 ];
+var _projSortCol=-1, _projSortDir=1;
+function sortProjBy(idx){
+  if(_projSortCol===idx){ _projSortDir*=-1; }
+  else{ _projSortCol=idx; _projSortDir=1; }
+  renderProjecao();
+}
 function calcProjRows(){
   var rows=_familiesOrig.map(function(f){
     var base=(f.estoque||0)+(f.agend||0);
@@ -883,12 +889,17 @@ function calcProjRows(){
     for(var i=0;i<saldos.length;i++){if(saldos[i]<=0){ruptIdx=i;break;}}
     return {f:f,saldos:saldos,ruptIdx:ruptIdx};
   });
-  rows.sort(function(a,b){
-    if(a.ruptIdx>=0&&b.ruptIdx>=0) return a.ruptIdx-b.ruptIdx;
-    if(a.ruptIdx>=0) return -1;
-    if(b.ruptIdx>=0) return 1;
-    return a.saldos[4]-b.saldos[4];
-  });
+  if(_projSortCol>=0){
+    var d=_projSortDir;
+    rows.sort(function(a,b){return (a.saldos[_projSortCol]-b.saldos[_projSortCol])*d;});
+  } else {
+    rows.sort(function(a,b){
+      if(a.ruptIdx>=0&&b.ruptIdx>=0) return a.ruptIdx-b.ruptIdx;
+      if(a.ruptIdx>=0) return -1;
+      if(b.ruptIdx>=0) return 1;
+      return a.saldos[4]-b.saldos[4];
+    });
+  }
   return rows;
 }
 function renderProjecao(){
@@ -937,7 +948,12 @@ function renderProjecao(){
     +'<table class="proj-table"><thead><tr>'
       +'<th class="th-fam">Família</th>'
       +'<th class="th-mes">WOH Atual</th>'
-      +PROJ_MESES.map(function(m){return '<th class="th-mes">'+m.nome+'</th>';}).join('')
+      +PROJ_MESES.map(function(m,i){
+        var isActive=_projSortCol===i;
+        var arrow=isActive?(_projSortDir===1?' ▲':' ▼'):' ⇅';
+        var style=isActive?'cursor:pointer;user-select:none;color:var(--accent)':'cursor:pointer;user-select:none';
+        return '<th class="th-mes" onclick="sortProjBy('+i+')" style="'+style+'">'+m.nome+'<span style="font-size:8px;opacity:'+(isActive?'1':'.4')+'">'+arrow+'</span></th>';
+      }).join('')
       +'<th class="th-mes">Ruptura em</th>'
     +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
