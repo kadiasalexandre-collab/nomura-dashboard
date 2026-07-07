@@ -178,7 +178,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .resumo-title{font-size:22px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
 .resumo-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
 .resumo-body{overflow-y:auto;padding:22px}
-.resumo-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.resumo-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
 .resumo-kpi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px}
 .resumo-kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
 .resumo-kpi-val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
@@ -988,6 +988,14 @@ function renderResumoBody(f){
       +kpi('WOH',f.woh+' semanas',wohInterpret(f.woh),col)
       +kpi('Agendamento',f.agend.toLocaleString('pt-BR')+' pcs','a caminho')
       +kpi('Ritmo '+DATA.mes_nome,ritmo.toLocaleString('pt-BR')+' pcs/mês','≈ '+ritmoSem+' pcs/sem',col)
+      +function(){
+          var real=f.real_jul||0;
+          var vest=f.vest_jul||ritmo;
+          var propEsp=DATA.dias_no_mes>0?Math.round(vest*DATA.dia_corte/DATA.dias_no_mes):0;
+          var pct=vest>0?Math.round(real/vest*100):0;
+          var vc=real>=propEsp?'var(--green)':'var(--amber)';
+          return kpi('Vendido até dia '+DATA.dia_corte,real.toLocaleString('pt-BR')+' pcs',pct+'% da venda est.',vc);
+        }()
     +'</div>'
     +'<div class="resumo-sec-title">Vendas Mensais — Jan a '+DATA.mes_nome+'</div>'
     +'<canvas id="resumoChart" height="190" style="display:block;width:100%;max-width:100%;margin-bottom:22px"></canvas>'
