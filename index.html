@@ -972,15 +972,14 @@ function renderResumoBody(f){
       +'<div class="resumo-kpi-val"'+(vc?' style="color:'+vc+'"':'')+'>'+val+'</div>'
       +'<div class="resumo-kpi-sub">'+sub+'</div></div>';
   }
-  function projRow(lbl,vest,cart,c){
-    var diff=cart-vest, sign=diff>=0?'+':'';
-    var pct=vest>0?Math.round(diff/vest*100):0;
-    var dc=diff>=0?'var(--green)':'var(--red)';
+  function projRow(lbl,vest,cart,c,saldo){
+    var ds=saldo>=0?'var(--green)':'var(--red)';
+    var sign=saldo>=0?'+':'';
     return '<tr style="border-bottom:1px solid var(--border)">'
       +'<td style="padding:9px 14px;font-weight:600">'+lbl+'</td>'
       +'<td style="padding:9px 14px;text-align:right;color:'+c+';font-weight:700;font-variant-numeric:tabular-nums">'+vest.toLocaleString("pt-BR")+' pcs</td>'
       +'<td style="padding:9px 14px;text-align:right;color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums">'+cart.toLocaleString("pt-BR")+' pcs</td>'
-      +'<td style="padding:9px 14px;text-align:right;color:'+dc+';font-size:11px">'+sign+diff.toLocaleString("pt-BR")+' ('+sign+pct+'%)</td>'
+      +'<td style="padding:9px 14px;text-align:right;color:'+ds+';font-weight:700;font-variant-numeric:tabular-nums">'+sign+saldo.toLocaleString("pt-BR")+' pcs</td>'
     +'</tr>';
   }
   document.getElementById('resumoBody').innerHTML=
@@ -998,13 +997,21 @@ function renderResumoBody(f){
         +'<th style="padding:8px 14px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Mês</th>'
         +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Venda Estimada</th>'
         +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Carteira</th>'
-        +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Diferença</th>'
+        +'<th style="padding:8px 14px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Saldo Final</th>'
       +'</tr></thead><tbody>'
-        +projRow(DATA.mes_nome+' '+DATA.ano, f.vest_jul||ritmo, f.cart_jul||0, col)
-        +projRow('Agosto '+DATA.ano, f.vest_ago||0, f.cart_ago||0, '#5b9cf6')
-        +projRow('Setembro '+DATA.ano, f.vest_set||0, f.cart_set||0, '#5b9cf6')
-        +projRow('Outubro '+DATA.ano, f.vest_out||0, f.cart_out||0, '#5b9cf6')
-        +projRow('Novembro '+DATA.ano, f.vest_nov||0, f.cart_nov||0, '#5b9cf6')
+        +function(){
+          var base = (f.estoque||0) + (f.agend||0);
+          var s1 = base + (f.cart_jul||0) - (f.vest_jul||ritmo);
+          var s2 = s1   + (f.cart_ago||0) - (f.vest_ago||0);
+          var s3 = s2   + (f.cart_set||0) - (f.vest_set||0);
+          var s4 = s3   + (f.cart_out||0) - (f.vest_out||0);
+          var s5 = s4   + (f.cart_nov||0) - (f.vest_nov||0);
+          return projRow(DATA.mes_nome+' '+DATA.ano, f.vest_jul||ritmo, f.cart_jul||0, col, s1)
+            +projRow('Agosto '+DATA.ano,    f.vest_ago||0, f.cart_ago||0, '#5b9cf6', s2)
+            +projRow('Setembro '+DATA.ano,  f.vest_set||0, f.cart_set||0, '#5b9cf6', s3)
+            +projRow('Outubro '+DATA.ano,   f.vest_out||0, f.cart_out||0, '#5b9cf6', s4)
+            +projRow('Novembro '+DATA.ano,  f.vest_nov||0, f.cart_nov||0, '#5b9cf6', s5);
+        }()
       +'</tbody>'
     +'</table>';
   requestAnimationFrame(function(){
