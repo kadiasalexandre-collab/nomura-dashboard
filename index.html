@@ -419,12 +419,13 @@ function setStateFilter(state, btn){
 }
 
 function renderKPIs(){
-  var pct=Math.round(REALIZ_RS/META_RS*100);
   var projPct=Math.round(PROJ_RS/META_RS*100);
+  var totalRealPcs = _familiesOrig.reduce(function(a,f){return a+(f.real_jul||0);},0);
+  var ritmoMensal  = DATA.dia_corte>0 ? Math.round(totalRealPcs/DATA.dia_corte*DATA.dias_no_mes) : 0;
   var kpis=[
     {l:'Estoque Total ('+families.length+' fam.)',v:totalEst.toLocaleString('pt-BR')+' pcs',s:'+'+totalAgend.toLocaleString('pt-BR')+' agendados',c:'kpi-b'},
     {l:'WOH Médio',v:wohMedia+' sem',s:'Ideal: 8–16 semanas',c:wohMedia>20?'kpi-a':'kpi-g'},
-    {l:'Realizado '+DATA.mes_nome+' ('+DATA.dia_corte+' dias)',v:'R$ '+fmt(REALIZ_RS),s:pct+'% da meta',c:'kpi-g'},
+    {l:'Realizado '+DATA.mes_nome+' ('+DATA.dia_corte+' dias)',v:totalRealPcs.toLocaleString('pt-BR')+' pcs',s:'Ritmo: '+ritmoMensal.toLocaleString('pt-BR')+' pcs/mês',c:'kpi-g'},
     {l:'Projeção Ritmo '+DATA.mes_nome,v:'R$ '+fmt(PROJ_RS),s:projPct+'% da meta',c:projPct>=95?'kpi-g':projPct>=80?'kpi-a':'kpi-r'},
     {l:'Famílias Ruptura',v:String(nRuptura),s:'WOH < 9 semanas',c:'kpi-r'},
     {l:'Excesso / Estrela',v:nExcesso+' / '+nEstrela,s:'WOH ≥ 16 sem / crescimento',c:'kpi-a'},
