@@ -172,6 +172,34 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 /* cards view */
 .cards-view{display:none;overflow-y:auto;padding:16px 20px;flex:1}
 .cards-view.active{display:block}
+.insights-view{display:none;overflow-y:auto;padding:24px 28px;flex:1;background:var(--bg)}
+.insights-view.active{display:block}
+.ins-section{margin-bottom:28px}
+.ins-section-title{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-left:2px}
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.ins-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;border-left:4px solid var(--border);cursor:default;transition:box-shadow .15s}
+.ins-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.ins-card.red{border-left-color:#e53935}
+.ins-card.orange{border-left-color:#f57c00}
+.ins-card.green{border-left-color:#2e7d32}
+.ins-card.blue{border-left-color:#1565c0}
+.ins-cat{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;opacity:.7}
+.ins-cat.red{color:#e53935}.ins-cat.orange{color:#f57c00}.ins-cat.green{color:#2e7d32}.ins-cat.blue{color:#1565c0}
+.ins-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3}
+.ins-body{font-size:12px;color:var(--muted);line-height:1.55}
+.ins-body b{color:var(--text)}
+.ins-chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-top:8px}
+.ins-chip.red{background:#fde8e8;color:#c62828}
+.ins-chip.orange{background:#fff3e0;color:#e65100}
+.ins-chip.green{background:#e8f5e9;color:#1b5e20}
+.ins-chip.blue{background:#e3f2fd;color:#0d47a1}
+.ins-fam-link{color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:600}
+.ins-fam-link:hover{opacity:.8}
+.ins-list{margin:6px 0 0;padding:0;list-style:none}
+.ins-list li{display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;border-bottom:1px solid var(--border)}
+.ins-list li:last-child{border-bottom:none}
+.ins-list .il-name{color:var(--text);font-weight:500}
+.ins-list .il-val{color:var(--muted);font-size:11px}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
 .cards-section-hdr{grid-column:1/-1;padding:6px 4px 2px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);margin-bottom:2px}
 .fam-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer}
@@ -246,6 +274,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <button class="view-tab active" id="tabDash" onclick="setView('dash',this)">Dashboard</button>
         <button class="view-tab" id="tabCards" onclick="setView('cards',this)">Cards</button>
         <button class="view-tab" id="tabProj" onclick="setView('proj',this)">Projeção de Ruptura</button>
+        <button class="view-tab" id="tabInsights" onclick="setView('insights',this)">Insights</button>
       </div>
       <button class="agend-btn" onclick="openAgend()">📦 Agendamentos</button>
       <span class="tag tag-live">● AO VIVO</span>
@@ -321,6 +350,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="alerts-panel" id="alertsPanel"></div>
   </div>
   <div class="proj-view" id="projView"></div>
+  <div class="insights-view" id="insightsView"></div>
   <div class="cards-view" id="cardsView">
     <div class="cards-export-bar" id="cardsExportBar">
       <button class="print-btn" onclick="printCards()">🖨 Exportar / Imprimir</button>
@@ -860,9 +890,11 @@ function setView(mode, btn){
   var mainEl=document.querySelector('.main');
   var cardsEl=document.getElementById('cardsView');
   var projEl=document.getElementById('projView');
+  var insEl=document.getElementById('insightsView');
   var exportBar=document.getElementById('cardsExportBar');
   cardsEl.classList.remove('active');
   projEl.classList.remove('active');
+  insEl.classList.remove('active');
   if(exportBar) exportBar.classList.remove('visible');
   if(mode==='cards'){
     mainEl.style.display='none'; cardsEl.classList.add('active');
@@ -871,6 +903,9 @@ function setView(mode, btn){
   } else if(mode==='proj'){
     mainEl.style.display='none'; projEl.classList.add('active');
     renderProjecao();
+  } else if(mode==='insights'){
+    mainEl.style.display='none'; insEl.classList.add('active');
+    renderInsights();
   } else {
     mainEl.style.display='';
   }
@@ -1057,6 +1092,208 @@ function printProj(){
     +'<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>'
     +'</body></html>');
   pw.document.close();
+}
+/* ─── INSIGHTS VIEW ─────────────────────────────────────────────────────────── */
+function goFam(name){
+  setView('dash',document.getElementById('tabDash'));
+  selectByName(name);
+}
+function insCard(color,cat,title,body,chip){
+  return '<div class="ins-card '+color+'">'
+    +'<div class="ins-cat '+color+'">'+cat+'</div>'
+    +'<div class="ins-title">'+title+'</div>'
+    +'<div class="ins-body">'+body+'</div>'
+    +(chip?'<span class="ins-chip '+color+'">'+chip+'</span>':'')
+    +'</div>';
+}
+function insListCard(color,cat,title,items){
+  var rows=items.map(function(it){
+    return '<li><span class="il-name">'+it[0]+'</span><span class="il-val">'+it[1]+'</span></li>';
+  }).join('');
+  return '<div class="ins-card '+color+'">'
+    +'<div class="ins-cat '+color+'">'+cat+'</div>'
+    +'<div class="ins-title">'+title+'</div>'
+    +'<ul class="ins-list">'+rows+'</ul>'
+    +'</div>';
+}
+function renderInsights(){
+  var fs=_familiesOrig;
+  var dia=DATA.dia_corte, dias=DATA.dias_no_mes;
+  var ritmoMes=function(f){return dia>0?Math.round(f.real_jul/dia*dias):0;};
+
+  /* ── RUPTURA ── */
+  var emRuptura=fs.filter(function(f){return f.woh>0&&f.woh<9;}).sort(function(a,b){return a.woh-b.woh;});
+  var semEstoque=fs.filter(function(f){return f.estoque===0&&f.woh===0;});
+  var critRow=emRuptura[0];
+
+  // ruptura mais próxima via projeção
+  var MESES_N=['Jul','Ago','Set','Out','Nov'];
+  var ruptProj=[];
+  fs.forEach(function(f){
+    var base=(f.estoque||0)+(f.agend||0);
+    var s=base;
+    var proj=f.proj||[];
+    for(var i=0;i<proj.length;i++){
+      s+=(proj[i].cart||0)-(proj[i].vest||0);
+      if(s<=0){ruptProj.push({f:f,mes:MESES_N[i]||'?',idx:i});break;}
+    }
+  });
+  ruptProj.sort(function(a,b){return a.idx-b.idx;});
+
+  /* ── CRESCIMENTO ── */
+  var comVenda=fs.filter(function(f){return f.real_jul>0;});
+  var melhorVenda=comVenda.slice().sort(function(a,b){return b.real_jul-a.real_jul;})[0];
+  var piorVenda=comVenda.slice().sort(function(a,b){return a.real_jul-b.real_jul;})[0];
+  // crescimento vs junho: (ritmo jul / jun - 1)
+  var cresc=fs.filter(function(f){return f.vendas[5]>0&&f.real_jul>0;}).map(function(f){
+    var rm=ritmoMes(f);
+    return {f:f,pct:Math.round((rm/f.vendas[5]-1)*100)};
+  }).sort(function(a,b){return b.pct-a.pct;});
+  var topCrescent=cresc.slice(0,3);
+  var topDeclin=cresc.slice().sort(function(a,b){return a.pct-b.pct;}).slice(0,3);
+
+  // realizado vs meta
+  var metaRS=DATA.meta_rs||0;
+  var realRS=DATA.realizado_rs||0;
+  var pctMeta=metaRS>0?Math.round(realRS/metaRS*100):0;
+  var ritmoProj=dia>0?Math.round(realRS/dia*dias):0;
+  var pctRitmo=metaRS>0?Math.round(ritmoProj/metaRS*100):0;
+
+  /* ── ESTOQUE ── */
+  var excesso=fs.filter(function(f){return f.woh>=16&&f.estoque>0;}).sort(function(a,b){return b.woh-a.woh;});
+  var top3Exc=excesso.slice(0,5);
+  var semVenda=fs.filter(function(f){return f.estoque>0&&f.real_jul===0;});
+
+  /* ── AGENDAMENTO ── */
+  var totalAgend=fs.reduce(function(s,f){return s+(f.agend||0);},0);
+  var topAgend=fs.filter(function(f){return f.agend>0;}).sort(function(a,b){return b.agend-a.agend;}).slice(0,5);
+
+  /* ── BUILD HTML ── */
+  var html='<div style="max-width:1300px;margin:0 auto">';
+
+  // --- SEÇÃO RUPTURA ---
+  html+='<div class="ins-section"><div class="ins-section-title">Ruptura</div><div class="ins-grid">';
+
+  // card 1: total em risco
+  html+=insCard('red','Alerta de Ruptura',
+    emRuptura.length+' famílias em risco',
+    emRuptura.length>0
+      ? 'WOH &lt; 9 semanas: <b>'+emRuptura.map(function(f){
+          return '<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'
+                 +f.name+'</span> ('+f.woh+'s)';
+        }).join(', ')+'</b>'
+      : 'Nenhuma família em risco crítico no momento.',
+    emRuptura.length>0?emRuptura.length+' famílias':'OK');
+
+  // card 2: ruptura mais próxima por projeção
+  if(ruptProj.length>0){
+    var rp=ruptProj[0];
+    html+=insCard('red','Projeção de Ruptura',
+      '<span class="ins-fam-link" onclick="goFam(\''+rp.f.name.replace(/'/g,"\\'")+'\')">'+rp.f.name+'</span> zera em '+rp.mes,
+      'Com a venda estimada atual, o estoque se esgota em <b>'+rp.mes+'</b>. '
+      +'Estoque atual: <b>'+rp.f.estoque.toLocaleString('pt-BR')+' pcs</b>. '
+      +(rp.f.agend>0?'Agendamento previsto: <b>'+rp.f.agend.toLocaleString('pt-BR')+' pcs</b>.':'Sem agendamento previsto.'),
+      'Ruptura em '+rp.mes);
+  }
+
+  // card 3: sem estoque
+  if(semEstoque.length>0){
+    html+=insCard('red','Sem Estoque',
+      semEstoque.length+' famílias zeradas',
+      'Sem estoque e sem WOH: <b>'+semEstoque.map(function(f){return f.name;}).join(', ')+'</b>. Toda venda está perdida.',
+      'Reposição urgente');
+  }
+
+  html+='</div></div>';
+
+  // --- SEÇÃO CRESCIMENTO ---
+  html+='<div class="ins-section"><div class="ins-section-title">Crescimento</div><div class="ins-grid">';
+
+  // meta
+  var metaColor=pctMeta>=95?'green':pctMeta>=80?'orange':'red';
+  html+=insCard(metaColor,'Realizado vs Meta',
+    pctMeta+'% da meta — R$ '+Math.round(realRS/1000).toLocaleString('pt-BR')+'k',
+    'Realizado até dia <b>'+dia+'</b>: <b>R$ '+Math.round(realRS/1000).toLocaleString('pt-BR')+'k</b>. '
+    +'No ritmo atual, projection de <b>R$ '+Math.round(ritmoProj/1000).toLocaleString('pt-BR')+'k</b> — '
+    +pctRitmo+'% da meta de R$ '+Math.round(metaRS/1000).toLocaleString('pt-BR')+'k.',
+    pctRitmo+'% da meta projetado');
+
+  // maior venda
+  if(melhorVenda){
+    var rmMelhor=ritmoMes(melhorVenda);
+    html+=insCard('green','Melhor do Mês',
+      '<span class="ins-fam-link" onclick="goFam(\''+melhorVenda.name.replace(/'/g,"\\'")+'\')">'+melhorVenda.name+'</span> lidera em julho',
+      'Maior venda até o momento: <b>'+melhorVenda.real_jul.toLocaleString('pt-BR')+' pcs</b> até dia '+dia
+      +'. Ritmo mensal projetado: <b>'+rmMelhor.toLocaleString('pt-BR')+' pcs</b>.',
+      'Top vendas');
+  }
+
+  // crescimento vs jun
+  if(topCrescent.length>0){
+    html+=insListCard('green','Aceleração vs Junho',
+      'Famílias acelerando vs mês anterior',
+      topCrescent.map(function(x){
+        return ['<span class="ins-fam-link" onclick="goFam(\''+x.f.name.replace(/'/g,"\\'")+'\')">'+x.f.name+'</span>',
+                (x.pct>=0?'+':'')+x.pct+'% vs Jun'];
+      }));
+  }
+
+  // queda vs jun
+  if(topDeclin.length>0&&topDeclin[0].pct<0){
+    html+=insListCard('orange','Desaceleração vs Junho',
+      'Famílias abaixo do ritmo de junho',
+      topDeclin.filter(function(x){return x.pct<0;}).map(function(x){
+        return ['<span class="ins-fam-link" onclick="goFam(\''+x.f.name.replace(/'/g,"\\'")+'\')">'+x.f.name+'</span>',
+                x.pct+'% vs Jun'];
+      }));
+  }
+
+  html+='</div></div>';
+
+  // --- SEÇÃO ESTOQUE ---
+  html+='<div class="ins-section"><div class="ins-section-title">Estoque</div><div class="ins-grid">';
+
+  if(top3Exc.length>0){
+    html+=insListCard('orange','Excesso de Estoque',
+      excesso.length+' famílias com WOH &gt; 16 semanas',
+      top3Exc.map(function(f){
+        return ['<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'+f.name+'</span>',
+                f.woh+'s — '+f.estoque.toLocaleString('pt-BR')+' pcs'];
+      }));
+  }
+
+  if(semVenda.length>0){
+    html+=insCard('orange','Estoque Parado',
+      semVenda.length+' famílias com estoque e zero vendas em julho',
+      'Têm produto mas não venderam nada ainda: <b>'
+      +semVenda.slice(0,6).map(function(f){
+        return '<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'+f.name+'</span>';
+      }).join(', ')+'</b>'+(semVenda.length>6?' e mais '+(semVenda.length-6)+'.':'.'),
+      semVenda.length+' famílias');
+  }
+
+  html+='</div></div>';
+
+  // --- SEÇÃO AGENDAMENTOS ---
+  if(totalAgend>0){
+    html+='<div class="ins-section"><div class="ins-section-title">Chegadas Previstas</div><div class="ins-grid">';
+    html+=insCard('blue','Agendamentos',
+      totalAgend.toLocaleString('pt-BR')+' pcs chegando',
+      'Total de peças agendadas para entrega: <b>'+totalAgend.toLocaleString('pt-BR')+' pcs</b> em '
+      +topAgend.length+' famílias. '
+      +'Reforça cobertura nas famílias com WOH mais baixo.',
+      'Em trânsito');
+    html+=insListCard('blue','Top Famílias com Agendamento',
+      'Maiores volumes previstos de chegada',
+      topAgend.map(function(f){
+        return ['<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'+f.name+'</span>',
+                f.agend.toLocaleString('pt-BR')+' pcs'];
+      }));
+    html+='</div></div>';
+  }
+
+  html+='</div>';
+  document.getElementById('insightsView').innerHTML=html;
 }
 function renderCards(){
   var arr=getSorted();
