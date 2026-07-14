@@ -1471,7 +1471,7 @@ function renderCards(){
     var saldoRitmo=f.saldo_ritmo;
     function row(lbl,val,vc,rc){
       return '<div class="fam-row"'+(rc?' style="color:'+rc+'"':'')+'>'
-        +'<span class="fam-row-lbl">'+lbl+'</span>'
+        +'<span class="fam-row-lbl"'+(rc?' style="color:'+rc+'"':'')+'>'+lbl+'</span>'
         +'<span class="fam-row-val"'+(vc?' style="color:'+vc+'"':'')+'>'+val.toLocaleString('pt-BR')+'</span>'
       +'</div>';
     }
