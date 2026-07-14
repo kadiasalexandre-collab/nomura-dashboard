@@ -1469,8 +1469,8 @@ function renderCards(){
     var vest=f.vest_jul||f.ritmo_jul;
     var saldoEst=f.saldo_est;
     var saldoRitmo=f.saldo_ritmo;
-    function row(lbl,val,vc){
-      return '<div class="fam-row">'
+    function row(lbl,val,vc,rc){
+      return '<div class="fam-row"'+(rc?' style="color:'+rc+'"':'')+'>'
         +'<span class="fam-row-lbl">'+lbl+'</span>'
         +'<span class="fam-row-val"'+(vc?' style="color:'+vc+'"':'')+'>'+val.toLocaleString('pt-BR')+'</span>'
       +'</div>';
@@ -1499,9 +1499,9 @@ function renderCards(){
       +'<div class="fam-card-body">'
         +row('Estoque do dia', f.estoque)
         +row('Agendamento',    f.agend)
-        +row(DATA.mes_nome.substring(0,3)+' realizado até '+dia, f.real_jul||0)
+        +row(DATA.mes_nome.substring(0,3)+' realizado até '+dia, f.real_jul||0, null, '#c00000')
         +row('Ritmo '+DATA.mes_nome.substring(0,3), ritmoReal, ritmoColor)
-        +row('Venda est. '+DATA.mes_nome.substring(0,3), vest)
+        +row('Venda est. '+DATA.mes_nome.substring(0,3), vest, null, '#c00000')
         +'<div class="fam-row-sep"></div>'
         +'<div class="fam-row fam-row-saldo">'
           +'<span class="fam-row-lbl">Saldo c/ est.</span>'
