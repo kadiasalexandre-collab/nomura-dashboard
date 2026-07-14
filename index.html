@@ -1499,9 +1499,9 @@ function renderCards(){
       +'<div class="fam-card-body">'
         +row('Estoque do dia', f.estoque)
         +row('Agendamento',    f.agend)
-        +row(DATA.mes_nome.substring(0,3)+' realizado até '+dia, f.real_jul||0, null, '#c00000')
+        +'<div class="fam-row" style="color:#c00000"><span class="fam-row-lbl" style="color:#c00000 !important">'+DATA.mes_nome.substring(0,3)+' realizado até '+dia+'</span><span class="fam-row-val" style="color:#c00000 !important">'+(f.real_jul||0).toLocaleString('pt-BR')+'</span></div>'
         +row('Ritmo '+DATA.mes_nome.substring(0,3), ritmoReal, ritmoColor)
-        +row('Venda est. '+DATA.mes_nome.substring(0,3), vest, null, '#c00000')
+        +'<div class="fam-row" style="color:#c00000"><span class="fam-row-lbl" style="color:#c00000 !important">Venda est. '+DATA.mes_nome.substring(0,3)+'</span><span class="fam-row-val" style="color:#c00000 !important">'+vest.toLocaleString('pt-BR')+'</span></div>'
         +'<div class="fam-row-sep"></div>'
         +'<div class="fam-row fam-row-saldo">'
           +'<span class="fam-row-lbl">Saldo c/ est.</span>'
