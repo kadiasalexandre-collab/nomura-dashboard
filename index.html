@@ -1280,7 +1280,10 @@ function insListCard(color,cat,title,items){
     +'</div>';
 }
 function renderInsights(){
-  var fs=_familiesOrig;
+  // FEDS (camisas de selecao, pos-Copa) sempre ficam de fora das analises gerais —
+  // sao um ciclo de vida diferente (encerrando), nao um sinal de saude do negocio "normal".
+  // Tem secao propria no final desta view.
+  var fs=_familiesOrig.filter(function(f){return !isFeds(f);});
   var dia=DATA.dia_corte, dias=DATA.dias_no_mes;
   var ritmoMes=function(f){return dia>0?Math.round(f.real_jul/dia*dias):0;};
 
@@ -1452,6 +1455,29 @@ function renderInsights(){
         return ['<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'+f.name+'</span>',
                 f.agend.toLocaleString('pt-BR')+' pcs'];
       }));
+    html+='</div></div>';
+  }
+
+  // --- SEÇÃO FEDS (sempre à parte) ---
+  var fedsAll=_familiesOrig.filter(isFeds).sort(function(a,b){return b.woh-a.woh;});
+  if(fedsAll.length>0){
+    html+='<div class="ins-section"><div class="ins-section-title">FEDS (Copa do Mundo) — acompanhamento à parte</div><div class="ins-grid">';
+    html+=insListCard('blue','FEDS por Cobertura',
+      fedsAll.length+' famílias, ordenadas por semanas de cobertura (maior → menor)',
+      fedsAll.map(function(f){
+        return ['<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'+f.name+'</span>',
+                f.woh+'s — '+f.estoque.toLocaleString('pt-BR')+' pcs'];
+      }));
+    var fedsRuptura=fedsAll.filter(function(f){return f.woh>0&&f.woh<9;});
+    if(fedsRuptura.length>0){
+      html+=insCard('blue','FEDS em Esgotamento',
+        fedsRuptura.length+' famílias com cobertura curta',
+        'Camisas de seleção com WOH baixo não pedem reposição — é o fim natural do ciclo pós-Copa: <b>'
+        +fedsRuptura.map(function(f){
+          return '<span class="ins-fam-link" onclick="goFam(\''+f.name.replace(/'/g,"\\'")+'\')">'+f.name+'</span> ('+f.woh+'s)';
+        }).join(', ')+'</b>.',
+        'Sem ação de compra');
+    }
     html+='</div></div>';
   }
 
