@@ -1485,11 +1485,31 @@ function renderInsights(){
   html+='</div>';
   document.getElementById('insightsView').innerHTML=html;
 }
+// ordem fixa dos cards (definida com o time) — igual ao HTML impresso; independe do sort da
+// ranking panel. FEDS sempre por ultimo, ordenadas por semanas de cobertura decrescente.
+var CARDS_FIXED_ORDER=['EVO SL','SAMBA','SAMBA BRANCO','SAMBA JANE','SL72',
+  'TRACK PANTS','SPEZIAL','ADIOS PRO 4','DRIVE RC','CAMISETA COB',
+  'CAMISETA MASCULINA ORIGINALS','CAMISETA PERFORMANCE','UB','ADI2000','CAMPUS',
+  'CAMPUS CINZA','CAMPUS PRETO','SUPERSTAR II BRANCO','SUPERSTAR II PRETO','TRACK SHORTS',
+  'GAZELLE','ADISTAR','DROPSET','HYPERBOOST','SUPERSKATE'];
+function orderCardsFixed(arr){
+  var byName={};
+  arr.forEach(function(f){byName[f.name.trim().toUpperCase()]=f;});
+  var ordered=[];
+  CARDS_FIXED_ORDER.forEach(function(n){if(byName[n]){ordered.push(byName[n]);delete byName[n];}});
+  ['ADIMULE'].forEach(function(n){if(byName[n]){ordered.push(byName[n]);delete byName[n];}});
+  var fedsNames=Object.keys(byName).filter(function(n){return n.indexOf('FEDS')>=0;})
+    .sort(function(a,b){return byName[b].woh-byName[a].woh;});
+  var feds=fedsNames.map(function(n){var f=byName[n];delete byName[n];return f;});
+  var rest=Object.keys(byName).map(function(n){return byName[n];});
+  return {main:ordered.concat(rest), feds:feds};
+}
 function renderCards(){
   var arr=getSorted();
   var dia=DATA.dia_corte;
-  var ftw=arr.filter(function(f){return !isFeds(f)});
-  var feds=arr.filter(isFeds);
+  var grouped=orderCardsFixed(arr);
+  var ftw=grouped.main;
+  var feds=grouped.feds;
   function cardHTML(f){
     var col=statusColor(f.status);
     var ritmoReal=f.ritmo_jul_real;
