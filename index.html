@@ -252,6 +252,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .fam-row-val{font-size:10px;font-weight:600;font-variant-numeric:tabular-nums}
 .card-badge-x{color:#ef4444;font-size:15px;font-weight:900;line-height:1;flex-shrink:0}
 .card-badge-ok{color:#22c55e;font-size:15px;font-weight:900;line-height:1;flex-shrink:0}
+.card-badge-hot,.card-badge-cold{font-size:15px;font-weight:900;line-height:1;flex-shrink:0}
 .page-break{display:none}
 .cards-export-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
 .cards-export-bar.visible{display:flex}
@@ -1522,16 +1523,21 @@ function renderCards(){
         '<span class="fam-row-val"'+(vc&&!rc?' style="color:'+vc+'"':'')+'>'+val.toLocaleString('pt-BR')+'</span>'+
       '</div>';
     }
-    var wohAlta = f.woh >= 16;
-    var propEsp = DATA.dias_no_mes > 0 ? Math.round(vest * DATA.dia_corte / DATA.dias_no_mes) : 0;
-    var vendaOk = propEsp > 0 && (f.real_jul || 0) >= propEsp;
-    var wohBadge  = wohAlta
-      ? '<span class="card-badge-x"  title="WOH muito alta ('+f.woh+' sem)">✕</span>'
-      : '<span class="card-badge-ok" title="WOH dentro do normal ('+f.woh+' sem)">✓</span>';
-    var vendaBadge = vendaOk
-      ? '<span class="card-badge-ok" title="Venda dentro do esperado">✓</span>'
-      : '<span class="card-badge-x"  title="Venda abaixo do esperado">✕</span>';
-    var badges = wohBadge + vendaBadge;
+    // estoque: ruptura (WOH<9) ou excesso (WOH>=16); ritmo: alinhado/acima/abaixo da estimativa (+-10%)
+    var wohBadge = f.woh < 9
+      ? '<span class="card-badge-x" title="Ruptura (WOH '+f.woh+' sem)">🔴</span>'
+      : (f.woh >= 16 ? '<span class="card-badge-x" title="Excesso de estoque (WOH '+f.woh+' sem)">🟠</span>' : '');
+    var ritmoBadge = '';
+    if (vest > 0) {
+      var diffPct = (ritmoReal - vest) / vest;
+      if (Math.abs(diffPct) <= 0.10)
+        ritmoBadge = '<span class="card-badge-ok" title="Ritmo dentro de +-10% da estimativa">✅</span>';
+      else if (diffPct > 0.10)
+        ritmoBadge = '<span class="card-badge-hot" title="Ritmo acima do esperado — risco de ruptura antecipada">🔺</span>';
+      else
+        ritmoBadge = '<span class="card-badge-cold" title="Ritmo abaixo do esperado">🔻</span>';
+    }
+    var badges = wohBadge + ritmoBadge;
     var ritmoColor = ritmoReal > vest ? 'var(--red)' : null;
     var saldoEstColor = saldoEst < 0 ? 'var(--red)' : null;
     var saldoRitmoColor = saldoRitmo < 0 ? 'var(--red)' : null;
@@ -1604,6 +1610,7 @@ function printCards(){
     +'.fam-card-woh{font-size:10px;font-weight:700}'
     +'.card-badge-x{color:#ef4444;font-size:14px;font-weight:900;line-height:1;flex-shrink:0}'
     +'.card-badge-ok{color:#22c55e;font-size:14px;font-weight:900;line-height:1;flex-shrink:0}'
+    +'.card-badge-hot,.card-badge-cold{font-size:14px;font-weight:900;line-height:1;flex-shrink:0}'
     +'.fam-card-body{padding:0}'
     +'.fam-row{display:flex;justify-content:space-between;align-items:center;padding:3px 9px;border-bottom:1px solid #f0f0f0}'
     +'.fam-row-lbl{font-size:8.5px;color:#888}'
